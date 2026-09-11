@@ -67,6 +67,8 @@ export default createVuetify({
     // }, 
     VTextField: { variant: 'outlined', density: 'comfortable' },
     VSelect: { variant: 'outlined', density: 'comfortable' },
+    // v-date-input 不继承 VTextField 默认值，需单独声明 outlined 保持筛选控件风格统一
+    VDateInput: { variant: 'outlined' },
     VDataTable: { rounded: 'lg' },
     VList: {
       prependGap: "10",
