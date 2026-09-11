@@ -17,7 +17,7 @@
       <!-- 暗色模式 -->
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <v-icon :icon="app.dark ? 'mdi-weather-sunny' : 'mdi-weather-night'" size="20" />
+          <v-icon :icon="app.dark ? 'mdi-weather-night' : 'mdi-weather-sunny'" size="20" />
           <span class="text-body-2">暗色模式</span>
         </div>
         <v-switch

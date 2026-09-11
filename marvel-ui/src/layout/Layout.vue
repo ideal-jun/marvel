@@ -68,11 +68,11 @@
           />
         </template>
       </v-tooltip>
-      <v-tooltip :text="app.dark ? '亮色模式' : '暗色模式'" location="bottom">
+      <v-tooltip :text="app.dark ? '切换亮色模式' : '切换暗色模式'" location="bottom">
         <template #activator="{ props }">
           <v-btn
             v-bind="props"
-            :icon="app.dark ? 'mdi-weather-sunny' : 'mdi-weather-night'"
+            :icon="app.dark ? 'mdi-weather-night' : 'mdi-weather-sunny'"
             variant="text"
             rounded="lg"
             @click="app.toggleTheme()"
