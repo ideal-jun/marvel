@@ -1,6 +1,7 @@
 package com.marvel.module.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.marvel.common.annotation.Log;
 import com.marvel.common.result.R;
 import com.marvel.module.system.entity.SysDictData;
 import com.marvel.module.system.entity.SysDictType;
@@ -34,6 +35,7 @@ public class SysDictController {
     }
 
     @SaCheckPermission("system:dict:add")
+    @Log(title = "字典管理", businessType = Log.BusinessType.INSERT)
     @PostMapping("/system/dict/type")
     public R<Void> addType(@RequestBody SysDictType dictType) {
         dictService.createType(dictType);
@@ -41,6 +43,7 @@ public class SysDictController {
     }
 
     @SaCheckPermission("system:dict:edit")
+    @Log(title = "字典管理", businessType = Log.BusinessType.UPDATE)
     @PutMapping("/system/dict/type")
     public R<Void> updateType(@RequestBody SysDictType dictType) {
         dictService.updateType(dictType);
@@ -48,6 +51,7 @@ public class SysDictController {
     }
 
     @SaCheckPermission("system:dict:remove")
+    @Log(title = "字典管理", businessType = Log.BusinessType.DELETE)
     @DeleteMapping("/system/dict/type/{dictId}")
     public R<Void> removeType(@PathVariable Long dictId) {
         dictService.deleteType(dictId);
@@ -71,6 +75,7 @@ public class SysDictController {
     }
 
     @SaCheckPermission("system:dict:add")
+    @Log(title = "字典管理", businessType = Log.BusinessType.INSERT)
     @PostMapping("/system/dict/data")
     public R<Void> addData(@RequestBody SysDictData dictData) {
         dictService.createData(dictData);
@@ -78,6 +83,7 @@ public class SysDictController {
     }
 
     @SaCheckPermission("system:dict:edit")
+    @Log(title = "字典管理", businessType = Log.BusinessType.UPDATE)
     @PutMapping("/system/dict/data")
     public R<Void> updateData(@RequestBody SysDictData dictData) {
         dictService.updateData(dictData);
@@ -85,6 +91,7 @@ public class SysDictController {
     }
 
     @SaCheckPermission("system:dict:remove")
+    @Log(title = "字典管理", businessType = Log.BusinessType.DELETE)
     @DeleteMapping("/system/dict/data/{dictCodes}")
     public R<Void> removeData(@PathVariable List<Long> dictCodes) {
         dictService.deleteData(dictCodes);

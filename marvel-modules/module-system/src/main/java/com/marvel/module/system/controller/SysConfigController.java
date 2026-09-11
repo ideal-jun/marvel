@@ -1,6 +1,7 @@
 package com.marvel.module.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.marvel.common.annotation.Log;
 import com.marvel.common.result.R;
 import com.marvel.module.system.entity.SysConfig;
 import com.marvel.module.system.service.SysConfigService;
@@ -40,6 +41,7 @@ public class SysConfigController {
     }
 
     @SaCheckPermission("system:config:add")
+    @Log(title = "参数管理", businessType = Log.BusinessType.INSERT)
     @PostMapping
     public R<Void> add(@RequestBody SysConfig config) {
         configService.createConfig(config);
@@ -47,6 +49,7 @@ public class SysConfigController {
     }
 
     @SaCheckPermission("system:config:edit")
+    @Log(title = "参数管理", businessType = Log.BusinessType.UPDATE)
     @PutMapping
     public R<Void> update(@RequestBody SysConfig config) {
         configService.updateConfig(config);
@@ -54,6 +57,7 @@ public class SysConfigController {
     }
 
     @SaCheckPermission("system:config:remove")
+    @Log(title = "参数管理", businessType = Log.BusinessType.DELETE)
     @DeleteMapping("/{configIds}")
     public R<Void> remove(@PathVariable List<Long> configIds) {
         configService.deleteConfigs(configIds);

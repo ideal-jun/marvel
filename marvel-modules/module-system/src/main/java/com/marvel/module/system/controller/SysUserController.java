@@ -1,6 +1,7 @@
 package com.marvel.module.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.marvel.common.annotation.Log;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.marvel.common.result.R;
@@ -61,6 +62,7 @@ public class SysUserController {
 
     /** 新增用户，初始密码必填并做复杂度校验 */
     @SaCheckPermission("system:user:add")
+    @Log(title = "用户管理", businessType = Log.BusinessType.INSERT)
     @PostMapping
     public R<Void> add(@RequestBody SysUser user,
                        @RequestParam(required = false) List<Long> roleIds) {
@@ -70,6 +72,7 @@ public class SysUserController {
 
     /** 修改用户基本信息与角色关联（不改动密码） */
     @SaCheckPermission("system:user:edit")
+    @Log(title = "用户管理", businessType = Log.BusinessType.UPDATE)
     @PutMapping
     public R<Void> update(@RequestBody SysUser user,
                           @RequestParam(required = false) List<Long> roleIds) {
@@ -79,6 +82,7 @@ public class SysUserController {
 
     /** 批量删除用户（超级管理员受保护） */
     @SaCheckPermission("system:user:remove")
+    @Log(title = "用户管理", businessType = Log.BusinessType.DELETE)
     @DeleteMapping("/{userIds}")
     public R<Void> remove(@PathVariable List<Long> userIds) {
         userService.deleteUsers(userIds);
@@ -87,6 +91,7 @@ public class SysUserController {
 
     /** 管理员重置用户密码 */
     @SaCheckPermission("system:user:resetPwd")
+    @Log(title = "用户管理", businessType = Log.BusinessType.UPDATE)
     @PutMapping("/resetPwd")
     public R<Void> resetPwd(@RequestParam Long userId,
                             @RequestParam @NotBlank @Size(min = 6, max = 32) String password) {
@@ -95,6 +100,7 @@ public class SysUserController {
     }
 
     /** 当前登录用户修改自己的密码（需验证原密码） */
+    @Log(title = "用户管理", businessType = Log.BusinessType.UPDATE)
     @PutMapping("/profile/password")
     public R<Void> changePwd(@RequestParam @NotBlank String oldPassword,
                              @RequestParam @NotBlank @Size(min = 6, max = 32) String newPassword) {
@@ -104,6 +110,7 @@ public class SysUserController {
 
     /** 启用/停用用户 */
     @SaCheckPermission("system:user:edit")
+    @Log(title = "用户管理", businessType = Log.BusinessType.UPDATE)
     @PutMapping("/changeStatus")
     public R<Void> changeStatus(@RequestParam Long userId, @RequestParam String status) {
         SysUser user = new SysUser();

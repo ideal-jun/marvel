@@ -1,6 +1,7 @@
 package com.marvel.module.infra.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.marvel.common.annotation.Log;
 import com.marvel.common.result.R;
 import com.marvel.module.infra.entity.SysJob;
 import com.marvel.module.infra.entity.SysJobLog;
@@ -34,6 +35,7 @@ public class SysJobController {
     }
 
     @SaCheckPermission("infra:job:add")
+    @Log(title = "定时任务", businessType = Log.BusinessType.INSERT)
     @PostMapping
     public R<Void> add(@RequestBody SysJob job) {
         jobService.createJob(job);
@@ -41,6 +43,7 @@ public class SysJobController {
     }
 
     @SaCheckPermission("infra:job:edit")
+    @Log(title = "定时任务", businessType = Log.BusinessType.UPDATE)
     @PutMapping
     public R<Void> update(@RequestBody SysJob job) {
         jobService.updateJob(job);
@@ -48,6 +51,7 @@ public class SysJobController {
     }
 
     @SaCheckPermission("infra:job:remove")
+    @Log(title = "定时任务", businessType = Log.BusinessType.DELETE)
     @DeleteMapping("/{jobIds}")
     public R<Void> remove(@PathVariable List<Long> jobIds) {
         jobService.deleteJobs(jobIds);
@@ -56,6 +60,7 @@ public class SysJobController {
 
     /** 启用/暂停任务（status: 0=正常 1=暂停） */
     @SaCheckPermission("infra:job:edit")
+    @Log(title = "定时任务", businessType = Log.BusinessType.UPDATE)
     @PutMapping("/changeStatus")
     public R<Void> changeStatus(@RequestParam Long jobId, @RequestParam String status) {
         jobService.changeStatus(jobId, status);
@@ -64,6 +69,7 @@ public class SysJobController {
 
     /** 立即执行一次，返回耗时 ms */
     @SaCheckPermission("infra:job:run")
+    @Log(title = "定时任务", businessType = Log.BusinessType.UPDATE)
     @PutMapping("/run/{jobId}")
     public R<Long> run(@PathVariable Long jobId) {
         return R.ok("执行成功", jobService.runOnce(jobId));

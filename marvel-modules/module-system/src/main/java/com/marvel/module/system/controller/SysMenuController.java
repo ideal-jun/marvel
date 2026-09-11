@@ -1,6 +1,7 @@
 package com.marvel.module.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.marvel.common.annotation.Log;
 import com.marvel.common.result.R;
 import com.marvel.module.system.entity.SysMenu;
 import com.marvel.module.system.service.SysMenuService;
@@ -53,6 +54,7 @@ public class SysMenuController {
     }
 
     @SaCheckPermission("system:menu:add")
+    @Log(title = "菜单管理", businessType = Log.BusinessType.INSERT)
     @PostMapping
     public R<Void> add(@RequestBody SysMenu menu) {
         menu.setMenuId(null);
@@ -61,6 +63,7 @@ public class SysMenuController {
     }
 
     @SaCheckPermission("system:menu:edit")
+    @Log(title = "菜单管理", businessType = Log.BusinessType.UPDATE)
     @PutMapping
     public R<Void> update(@RequestBody SysMenu menu) {
         menuService.updateById(menu);
@@ -68,6 +71,7 @@ public class SysMenuController {
     }
 
     @SaCheckPermission("system:menu:remove")
+    @Log(title = "菜单管理", businessType = Log.BusinessType.DELETE)
     @DeleteMapping("/{menuId}")
     public R<Void> remove(@PathVariable Long menuId) {
         List<Long> childIds = menuService.getChildMenuIds(menuId);

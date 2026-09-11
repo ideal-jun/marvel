@@ -1,6 +1,7 @@
 package com.marvel.module.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.marvel.common.annotation.Log;
 import com.marvel.common.result.R;
 import com.marvel.module.system.entity.SysDept;
 import com.marvel.module.system.service.SysDeptService;
@@ -34,6 +35,7 @@ public class SysDeptController {
     }
 
     @SaCheckPermission("system:dept:add")
+    @Log(title = "部门管理", businessType = Log.BusinessType.INSERT)
     @PostMapping
     public R<Void> add(@RequestBody SysDept dept) {
         deptService.createDept(dept);
@@ -41,6 +43,7 @@ public class SysDeptController {
     }
 
     @SaCheckPermission("system:dept:edit")
+    @Log(title = "部门管理", businessType = Log.BusinessType.UPDATE)
     @PutMapping
     public R<Void> update(@RequestBody SysDept dept) {
         deptService.updateDept(dept);
@@ -48,6 +51,7 @@ public class SysDeptController {
     }
 
     @SaCheckPermission("system:dept:remove")
+    @Log(title = "部门管理", businessType = Log.BusinessType.DELETE)
     @DeleteMapping("/{deptId}")
     public R<Void> remove(@PathVariable Long deptId) {
         deptService.deleteDept(deptId);

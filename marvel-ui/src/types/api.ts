@@ -209,3 +209,31 @@ export interface SysJobLogRow {
   startTime: string
   endTime: string
 }
+
+/** 操作日志（sys_oper_log） */
+export interface SysOperLogRow {
+  operId: number
+  title: string
+  /** 业务类型 + 方法全名，如 "UPDATE com.marvel...update" */
+  method: string
+  requestMethod: string
+  operUrl: string
+  operParam: string | null
+  operUser: string
+  operIp: string
+  status: string
+  errorMsg: string | null
+  operTime: string | null
+}
+
+/** 登录日志（sys_logininfor） */
+export interface SysLogininforRow {
+  infoId: number
+  username: string
+  ipaddr: string
+  browser: string
+  os: string
+  msg: string
+  status: string
+  loginTime: string | null
+}

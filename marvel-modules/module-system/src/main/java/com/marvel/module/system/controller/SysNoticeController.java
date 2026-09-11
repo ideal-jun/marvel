@@ -1,6 +1,7 @@
 package com.marvel.module.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.marvel.common.annotation.Log;
 import com.marvel.common.result.R;
 import com.marvel.module.system.entity.SysNotice;
 import com.marvel.module.system.service.SysNoticeService;
@@ -33,6 +34,7 @@ public class SysNoticeController {
     }
 
     @SaCheckPermission("system:notice:add")
+    @Log(title = "通知公告", businessType = Log.BusinessType.INSERT)
     @PostMapping
     public R<Void> add(@RequestBody SysNotice notice) {
         noticeService.createNotice(notice);
@@ -40,6 +42,7 @@ public class SysNoticeController {
     }
 
     @SaCheckPermission("system:notice:edit")
+    @Log(title = "通知公告", businessType = Log.BusinessType.UPDATE)
     @PutMapping
     public R<Void> update(@RequestBody SysNotice notice) {
         noticeService.updateNotice(notice);
@@ -47,6 +50,7 @@ public class SysNoticeController {
     }
 
     @SaCheckPermission("system:notice:remove")
+    @Log(title = "通知公告", businessType = Log.BusinessType.DELETE)
     @DeleteMapping("/{noticeIds}")
     public R<Void> remove(@PathVariable List<Long> noticeIds) {
         noticeService.deleteNotices(noticeIds);

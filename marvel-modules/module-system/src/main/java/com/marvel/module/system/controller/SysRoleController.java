@@ -1,6 +1,7 @@
 package com.marvel.module.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.marvel.common.annotation.Log;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.marvel.common.result.R;
 import com.marvel.module.system.entity.SysRole;
@@ -50,6 +51,7 @@ public class SysRoleController {
     }
 
     @SaCheckPermission("system:role:add")
+    @Log(title = "角色管理", businessType = Log.BusinessType.INSERT)
     @PostMapping
     public R<Void> add(@RequestBody SysRole role) {
         roleService.createRole(role);
@@ -57,6 +59,7 @@ public class SysRoleController {
     }
 
     @SaCheckPermission("system:role:edit")
+    @Log(title = "角色管理", businessType = Log.BusinessType.UPDATE)
     @PutMapping
     public R<Void> update(@RequestBody SysRole role) {
         roleService.updateRole(role);
@@ -64,6 +67,7 @@ public class SysRoleController {
     }
 
     @SaCheckPermission("system:role:remove")
+    @Log(title = "角色管理", businessType = Log.BusinessType.DELETE)
     @DeleteMapping("/{roleIds}")
     public R<Void> remove(@PathVariable List<Long> roleIds) {
         roleService.deleteRoles(roleIds);
