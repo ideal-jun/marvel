@@ -177,14 +177,14 @@ const headers = [
   { title: 'cron 表达式', key: 'cronExpression' },
   { title: '状态', key: 'status', width: 90 },
   { title: '操作', key: 'actions', width: 200, sortable: false },
-]
+].map((h) => ({ nowrap: true, ...h }))
 
 const logHeaders = [
   { title: '日志ID', key: 'jobLogId', width: 80 },
   { title: '状态', key: 'status', width: 80 },
   { title: '开始时间', key: 'startTime', width: 180 },
   { title: '结束时间', key: 'endTime' },
-]
+].map((h) => ({ nowrap: true, ...h }))
 
 function notify(text: string, color: 'success' | 'error' = 'success'): void {
   Object.assign(snack, { show: true, text, color })

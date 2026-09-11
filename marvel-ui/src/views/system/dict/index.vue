@@ -218,11 +218,12 @@ const typeQuery = reactive({ dictName: '' as string | null, dictType: '' as stri
 const typeForm = reactive<Partial<SysDictTypeRow>>({})
 
 const typeHeaders = [
-  { title: '字典名称', key: 'dictName' },
+  // 左栏较窄：固定列宽保证表头单行（4 字标题含排序图标约需 110px，2 字约 80px）
+  { title: '字典名称', key: 'dictName', width: 112 },
   { title: '类型键', key: 'dictType' },
   { title: '状态', key: 'status', width: 80 },
-  { title: '操作', key: 'actions', width: 100, sortable: false },
-]
+  { title: '操作', key: 'actions', width: 92, sortable: false },
+].map((h) => ({ nowrap: true, ...h }))
 
 /* ---------- 字典数据（主从） ---------- */
 const selectedType = ref<SysDictTypeRow | null>(null)
@@ -238,7 +239,7 @@ const dataHeaders = [
   { title: '排序', key: 'orderNum', width: 90 },
   { title: '状态', key: 'status', width: 90 },
   { title: '操作', key: 'actions', width: 100, sortable: false },
-]
+].map((h) => ({ nowrap: true, ...h }))
 
 const snack = reactive({ show: false, text: '', color: 'success' })
 

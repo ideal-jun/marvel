@@ -169,7 +169,7 @@ const headers = [
   { title: '提示消息', key: 'msg' },
   { title: '状态', key: 'status', width: 80 },
   { title: '登录时间', key: 'loginTime', width: 170 },
-]
+].map((h) => ({ nowrap: true, ...h }))
 
 function notify(text: string, color: 'success' | 'error' = 'success'): void {
   Object.assign(snack, { show: true, text, color })

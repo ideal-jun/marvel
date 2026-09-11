@@ -228,6 +228,8 @@ const headers = computed(() =>
       width: c.width,
       sortable: c.sortable,
       fixed: c.fixed ? ('start' as const) : undefined,
+      // 表头单行：nowrap 为 Vuetify 官方属性，列不足时表格横向滚动而非换行
+      nowrap: true,
     })),
 )
 

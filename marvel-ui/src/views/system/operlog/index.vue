@@ -121,7 +121,7 @@
         <template #item.method="{ item }">
           <v-tooltip :text="item.method" location="top">
             <template #activator="{ props: p }">
-              <span v-bind="p" class="text-body-2 text-secondary truncate inline-block max-w-40 align-middle cursor-help">{{ item.method }}</span>
+              <span v-bind="p" class="text-body-2 text-secondary truncate inline-block max-w-38 align-middle cursor-help">{{ item.method }}</span>
             </template>
           </v-tooltip>
         </template>
@@ -136,7 +136,7 @@
         <template #item.errorMsg="{ item }">
           <v-tooltip v-if="item.errorMsg" :text="item.errorMsg" location="top">
             <template #activator="{ props: p }">
-              <span v-bind="p" class="text-caption text-error truncate inline-block max-w-44 align-middle cursor-help">{{ item.errorMsg }}</span>
+              <span v-bind="p" class="text-caption text-error truncate inline-block max-w-30 align-middle cursor-help">{{ item.errorMsg }}</span>
             </template>
           </v-tooltip>
           <span v-else class="text-disabled text-caption">-</span>
@@ -200,18 +200,18 @@ const query = reactive<LogQuery>({
 
 const snack = reactive({ show: false, text: '', color: 'success' })
 
+// 勾选列 + 各列宽总和需控制在容器内（约 1110px），否则整表压缩导致表头换行
 const headers = [
-  { title: 'ID', key: 'operId', width: 70 },
   { title: '模块', key: 'title', width: 110 },
-  { title: '方法', key: 'method', width: 200 },
-  { title: '请求方式', key: 'requestMethod', width: 90 },
+  { title: '方法', key: 'method', width: 165 },
+  { title: '请求方式', key: 'requestMethod', width: 110 },
   { title: '操作人', key: 'operUser', width: 100 },
-  { title: 'IP', key: 'operIp', width: 120 },
-  { title: '参数', key: 'operParam', width: 70 },
+  { title: 'IP', key: 'operIp', width: 115 },
+  { title: '参数', key: 'operParam', width: 60 },
   { title: '状态', key: 'status', width: 80 },
-  { title: '错误消息', key: 'errorMsg', width: 180 },
-  { title: '操作时间', key: 'operTime', width: 170 },
-]
+  { title: '错误消息', key: 'errorMsg', width: 140 },
+  { title: '操作时间', key: 'operTime', width: 165 },
+].map((h) => ({ nowrap: true, ...h }))
 
 function notify(text: string, color: 'success' | 'error' = 'success'): void {
   Object.assign(snack, { show: true, text, color })
