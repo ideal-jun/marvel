@@ -72,7 +72,7 @@
         <template #activator="{ props }">
           <v-btn
             v-bind="props"
-            :icon="app.dark ? 'mdi-white-baseline-sunny' : 'mdi-weather-night'"
+            :icon="app.dark ? 'mdi-weather-sunny' : 'mdi-weather-night'"
             variant="text"
             rounded="lg"
             @click="app.toggleTheme()"
