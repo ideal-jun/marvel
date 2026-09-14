@@ -1,23 +1,21 @@
 <template>
-  <!-- 页签栏：置于 v-app-bar 的 extension 区。左=页签（点击切换/关闭），右=刷新与内容全屏 -->
-  <div class="flex items-center gap-1 px-2 bg-surface h-full w-full">
+  <!-- 页签栏（Chrome 风格）：置于 v-app-bar 的 extension 区。
+       左=页签（点击切换/关闭），右=刷新与内容全屏。
+       形状样式见下方 scoped：激活页签上圆角 + 下角内凹弧线与内容区连为一体 -->
+  <div class="chrome-tabs h-full w-full flex items-end">
     <v-tabs
       :model-value="route.path"
       density="compact"
-      color="primary"
-      class="min-w-0"
+      class="min-w-0 chrome-tabs__bar"
       :show-arrows="false"
-      align-tabs="center"
     >
       <v-tab
         v-for="t in tabs.visited"
         :key="t.path"
         :value="t.path"
         :to="t.path"
-        rounded="lg"
         slim
-        active-class="text-primary"
-        class="text-none group"
+        class="chrome-tab text-none group"
       >
         <v-icon v-if="t.icon" :icon="t.icon" size="15" class="mr-1" />
         <span class="text-body-2">{{ t.title }}</span>
@@ -31,23 +29,25 @@
       </v-tab>
     </v-tabs>
     <v-spacer />
-    <v-tooltip text="刷新当前页" location="bottom">
-      <template #activator="{ props }">
-        <v-btn v-bind="props" icon="mdi-refresh" variant="text" size="small" rounded="lg" @click="app.reload()" />
-      </template>
-    </v-tooltip>
-    <v-tooltip :text="app.contentFullscreen ? '退出内容全屏' : '内容全屏'" location="bottom">
-      <template #activator="{ props }">
-        <v-btn
-          v-bind="props"
-          :icon="app.contentFullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen'"
-          variant="text"
-          size="small"
-          rounded="lg"
-          @click="app.contentFullscreen = !app.contentFullscreen"
-        />
-      </template>
-    </v-tooltip>
+    <div class="self-center flex items-center pr-2">
+      <v-tooltip text="刷新当前页" location="bottom">
+        <template #activator="{ props }">
+          <v-btn v-bind="props" icon="mdi-refresh" variant="text" size="small" rounded="lg" @click="app.reload()" />
+        </template>
+      </v-tooltip>
+      <v-tooltip :text="app.contentFullscreen ? '退出内容全屏' : '内容全屏'" location="bottom">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            :icon="app.contentFullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen'"
+            variant="text"
+            size="small"
+            rounded="lg"
+            @click="app.contentFullscreen = !app.contentFullscreen"
+          />
+        </template>
+      </v-tooltip>
+    </div>
   </div>
 </template>
 
@@ -67,3 +67,64 @@ function onClose(path: string): void {
   if (next) void router.push(next)
 }
 </script>
+
+<style scoped>
+/* 隐藏 Vuetify 默认激活下划线（Chrome 页签无下划线，靠背景上浮区分） */
+:deep(.chrome-tab .v-tab__slider) {
+  display: none;
+}
+
+/* Chrome 风格页签：栏底色用主题背景色（比内容区略深），激活页签用表面色上浮。
+   颜色全部走 --v-theme-* 变量，明暗主题自动适配 */
+.chrome-tabs {
+  background: rgb(var(--v-theme-background));
+}
+
+/* 页签底端对齐栏底，高度略小于栏高留出呼吸感 */
+:deep(.chrome-tabs__bar) {
+  height: 100%;
+}
+
+:deep(.chrome-tab) {
+  position: relative;
+  height: 32px;
+  margin-top: 8px;
+  border-radius: 10px 10px 0 0;
+  letter-spacing: normal;
+  min-width: 90px;
+  transition: background 0.15s ease;
+}
+
+/* 非激活页签：悬停浮灰 */
+:deep(.chrome-tab:not(.v-tab--selected):hover) {
+  background: rgba(var(--v-theme-on-surface), 0.06);
+}
+
+/* 激活页签：表面色上浮，与下方内容连为一体 */
+:deep(.chrome-tab.v-tab--selected) {
+  background: rgb(var(--v-theme-surface));
+  box-shadow: 0 -1px 4px rgba(var(--v-theme-on-surface), 0.08);
+  z-index: 1;
+}
+
+/* Chrome 标志性内凹角：激活页签左右下角用径向渐变补出反向圆弧 */
+:deep(.chrome-tab.v-tab--selected)::before,
+:deep(.chrome-tab.v-tab--selected)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+}
+
+:deep(.chrome-tab.v-tab--selected)::before {
+  left: -10px;
+  background: radial-gradient(circle 10px at 0 0, transparent 98%, rgb(var(--v-theme-surface)) 100%);
+}
+
+:deep(.chrome-tab.v-tab--selected)::after {
+  right: -10px;
+  background: radial-gradient(circle 10px at 100% 0, transparent 98%, rgb(var(--v-theme-surface)) 100%);
+}
+</style>
