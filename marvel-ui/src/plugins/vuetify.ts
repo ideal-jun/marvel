@@ -67,8 +67,14 @@ export default createVuetify({
     // }, 
     VTextField: { variant: 'outlined', density: 'comfortable' },
     VSelect: { variant: 'outlined', density: 'comfortable' },
-    // v-date-input 不继承 VTextField 默认值，需单独声明 outlined 保持筛选控件风格统一
-    VDateInput: { variant: 'outlined' },
+    // v-date-input 不继承 VTextField 默认值，需单独声明保持筛选控件风格统一。
+    // 显示格式统一 yyyy-MM-dd：内置 date adapter 只认命名格式不认 token 字符串，
+    // 故用函数格式化（displayFormat 官方支持函数形式）
+    VDateInput: {
+      variant: 'outlined',
+      displayFormat: (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+    },
     VDataTable: { rounded: 'lg' },
     VList: {
       prependGap: "10",
