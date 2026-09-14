@@ -108,8 +108,9 @@ function onClose(path: string): void {
 }
 
 /* Chrome 标志性内凹角：激活页签左右下角用径向渐变补出反向圆弧。
-   注意 VBtn 也用伪元素做 hover 状态层（top/left/right:0、opacity:0），
-   必须显式覆盖这些属性，否则被压成透明/位置错乱 */
+   注意 VBtn 的伪元素被 Vuetify 占用：::before 挂 hover 底色（currentColor）、
+   ::after 是 focus 轮廓层（2px currentColor 边框 + inset 铺满），
+   两者都必须显式清掉，否则弧线上叠着深色块/边框 */
 :deep(.chrome-tab.v-tab--selected)::before,
 :deep(.chrome-tab.v-tab--selected)::after {
   content: '';
@@ -121,8 +122,8 @@ function onClose(path: string): void {
   width: 10px;
   height: 10px;
   opacity: 1;
+  border: none;
   border-radius: 0;
-  /* 清除 Vuetify 状态层的 currentColor 底色，避免从渐变透明区透出形成黑块 */
   background-color: transparent;
   pointer-events: none;
 }
