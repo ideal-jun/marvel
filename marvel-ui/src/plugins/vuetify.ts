@@ -72,6 +72,7 @@ export default createVuetify({
     // 故用函数格式化（displayFormat 官方支持函数形式）
     VDateInput: {
       variant: 'outlined',
+      placeholder: 'yyyy-MM-dd',
       displayFormat: (d: Date) =>
         `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
     },
