@@ -107,14 +107,21 @@ function onClose(path: string): void {
   z-index: 1;
 }
 
-/* Chrome 标志性内凹角：激活页签左右下角用径向渐变补出反向圆弧 */
+/* Chrome 标志性内凹角：激活页签左右下角用径向渐变补出反向圆弧。
+   注意 VBtn 也用伪元素做 hover 状态层（top/left/right:0、opacity:0），
+   必须显式覆盖这些属性，否则被压成透明/位置错乱 */
 :deep(.chrome-tab.v-tab--selected)::before,
 :deep(.chrome-tab.v-tab--selected)::after {
   content: '';
   position: absolute;
+  top: auto;
   bottom: 0;
+  left: auto;
+  right: auto;
   width: 10px;
   height: 10px;
+  opacity: 1;
+  border-radius: 0;
   pointer-events: none;
 }
 
