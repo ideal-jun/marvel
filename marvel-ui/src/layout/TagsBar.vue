@@ -100,11 +100,14 @@ function onClose(path: string): void {
   background: rgba(var(--v-theme-on-surface), 0.06);
 }
 
-/* 激活页签：表面色上浮，与下方内容连为一体 */
+/* 激活页签：表面色上浮，与下方内容连为一体。
+   position:relative 必须显式声明——VBtn 默认无定位，z-index 不生效会导致
+   左右外扩的内凹角被相邻标签按文档序盖住（右侧尤其明显） */
 :deep(.chrome-tab.v-tab--selected) {
+  position: relative;
+  z-index: 2;
   background: rgb(var(--v-theme-surface));
   box-shadow: 0 -1px 4px rgba(var(--v-theme-on-surface), 0.08);
-  z-index: 1;
 }
 
 /* Chrome 标志性内凹角：激活页签左右下角用径向渐变补出反向圆弧。
