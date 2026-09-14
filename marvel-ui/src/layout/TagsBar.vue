@@ -122,6 +122,8 @@ function onClose(path: string): void {
   height: 10px;
   opacity: 1;
   border-radius: 0;
+  /* 清除 Vuetify 状态层的 currentColor 底色，避免从渐变透明区透出形成黑块 */
+  background-color: transparent;
   pointer-events: none;
 }
 
