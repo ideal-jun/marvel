@@ -75,6 +75,15 @@ function onClose(path: string): void {
   display: none;
 }
 
+/* 消除取消选中瞬间的深色边框闪烁：VBtn 基础样式的 ::after 是 focus 轮廓层
+   （全尺寸 + 2px currentColor 边框）且带 transition: opacity .2s——取消选中时
+   它从弧线状态（10×10、opacity 1）切回基础全尺寸边框并淡出，淡出期间可见深色
+   边框。禁用其过渡使其瞬间归零 */
+:deep(.chrome-tab)::before,
+:deep(.chrome-tab)::after {
+  transition: none;
+}
+
 /* Chrome 风格页签：栏底保持表面色（与顶栏一体），激活页签用主题色。
    颜色全部走 --v-theme-* 变量，明暗主题自动适配 */
 .chrome-tabs {
