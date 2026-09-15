@@ -74,10 +74,10 @@ function onClose(path: string): void {
   display: none;
 }
 
-/* Chrome 风格页签：栏底色用主题背景色（比内容区略深），激活页签用表面色上浮。
+/* Chrome 风格页签：栏底保持表面色（与顶栏一体），激活页签用主题色。
    颜色全部走 --v-theme-* 变量，明暗主题自动适配 */
 .chrome-tabs {
-  background: rgb(var(--v-theme-background));
+  background: rgb(var(--v-theme-surface));
 }
 
 /* 页签底端对齐栏底，高度略小于栏高留出呼吸感 */
@@ -100,14 +100,14 @@ function onClose(path: string): void {
   background: rgba(var(--v-theme-on-surface), 0.06);
 }
 
-/* 激活页签：表面色上浮，与下方内容连为一体。
+/* 激活页签：主题色块，文字图标用反色（on-primary，明暗主题自动适配）。
    position:relative 必须显式声明——VBtn 默认无定位，z-index 不生效会导致
    左右外扩的内凹角被相邻标签按文档序盖住（右侧尤其明显） */
 :deep(.chrome-tab.v-tab--selected) {
   position: relative;
   z-index: 2;
-  background: rgb(var(--v-theme-surface));
-  box-shadow: 0 -1px 4px rgba(var(--v-theme-on-surface), 0.08);
+  background: rgb(var(--v-theme-primary));
+  color: rgb(var(--v-theme-on-primary));
 }
 
 /* Chrome 标志性内凹角：激活页签左右下角用径向渐变补出反向圆弧。
@@ -133,11 +133,11 @@ function onClose(path: string): void {
 
 :deep(.chrome-tab.v-tab--selected)::before {
   left: -10px;
-  background: radial-gradient(circle 10px at 0 0, transparent 98%, rgb(var(--v-theme-surface)) 100%);
+  background: radial-gradient(circle 10px at 0 0, transparent 98%, rgb(var(--v-theme-primary)) 100%);
 }
 
 :deep(.chrome-tab.v-tab--selected)::after {
   right: -10px;
-  background: radial-gradient(circle 10px at 100% 0, transparent 98%, rgb(var(--v-theme-surface)) 100%);
+  background: radial-gradient(circle 10px at 100% 0, transparent 98%, rgb(var(--v-theme-primary)) 100%);
 }
 </style>
