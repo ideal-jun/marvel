@@ -28,8 +28,9 @@
         />
       </v-tab>
     </v-tabs>
-    <v-spacer />
-    <div class="self-center flex items-center pr-2">
+    <!-- 不能加 v-spacer：它同为 flex-grow:1，会与 flex-1 的 tabs 平分栏宽，
+         导致页签区只剩一半宽度、标签多时溢出 -->
+    <div class="self-center flex items-center pr-2 shrink-0">
       <v-tooltip text="刷新当前页" location="bottom">
         <template #activator="{ props }">
           <v-btn v-bind="props" icon="mdi-refresh" variant="text" size="small" rounded="lg" @click="app.reload()" />
