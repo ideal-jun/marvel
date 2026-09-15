@@ -6,7 +6,7 @@
     <v-tabs
       :model-value="route.path"
       density="compact"
-      class="min-w-0 chrome-tabs__bar"
+      class="min-w-0 flex-1 chrome-tabs__bar"
       :show-arrows="false"
     >
       <v-tab
