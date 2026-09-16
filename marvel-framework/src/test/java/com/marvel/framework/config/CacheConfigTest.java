@@ -28,6 +28,17 @@ class CacheConfigTest {
     }
 
     @Test
+    void roundTripsOwnDomainPojo() {
+        GenericJackson2JsonRedisSerializer serializer = CacheConfig.buildValueSerializer();
+        com.marvel.common.result.R<String> value = com.marvel.common.result.R.ok("hello");
+
+        Object restored = serializer.deserialize(serializer.serialize(value));
+
+        assertThat(restored).isInstanceOf(com.marvel.common.result.R.class);
+        assertThat(((com.marvel.common.result.R<?>) restored).getData()).isEqualTo("hello");
+    }
+
+    @Test
     void rejectsNonAllowlistedPolymorphicType() {
         GenericJackson2JsonRedisSerializer serializer = CacheConfig.buildValueSerializer();
         // 典型反序列化 gadget 类名不在 java.util / java.lang 白名单内，必须被拒绝

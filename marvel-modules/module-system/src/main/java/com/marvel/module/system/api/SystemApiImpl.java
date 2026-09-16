@@ -3,8 +3,10 @@ package com.marvel.module.system.api;
 import com.marvel.api.system.SystemApi;
 import com.marvel.api.system.dto.MenuDTO;
 import com.marvel.api.system.dto.SysUserDTO;
+import com.marvel.module.system.entity.SysConfig;
 import com.marvel.module.system.entity.SysDept;
 import com.marvel.module.system.entity.SysUser;
+import com.marvel.module.system.service.SysConfigService;
 import com.marvel.module.system.service.SysDeptService;
 import com.marvel.module.system.service.SysMenuService;
 import com.marvel.module.system.service.SysRoleService;
@@ -27,6 +29,7 @@ public class SystemApiImpl implements SystemApi {
     private final SysRoleService roleService;
     private final SysMenuService menuService;
     private final SysDeptService deptService;
+    private final SysConfigService configService;
 
     @Override
     public SysUserDTO getUserByUsername(String username) {
@@ -55,6 +58,12 @@ public class SystemApiImpl implements SystemApi {
     public List<MenuDTO> getMenusByUserId(Long userId) {
         boolean admin = roleService.getRoleKeysByUserId(userId).contains("admin");
         return menuService.getMenuTree(userId, admin);
+    }
+
+    @Override
+    public String getConfigValue(String configKey) {
+        SysConfig config = configService.getByKey(configKey);
+        return config == null ? null : config.getConfigValue();
     }
 
     private SysUserDTO toDTO(SysUser user) {

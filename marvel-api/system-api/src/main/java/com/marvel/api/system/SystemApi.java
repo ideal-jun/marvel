@@ -24,4 +24,7 @@ public interface SystemApi {
 
     /** 用户可见菜单树（仅 M/C 类型，已按角色过滤） */
     List<MenuDTO> getMenusByUserId(Long userId);
+
+    /** 读取系统参数值（键不存在返回 null） */
+    String getConfigValue(String configKey);
 }

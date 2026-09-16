@@ -55,7 +55,8 @@
     <!-- 边框色用 on-surface 主题变量的低透明度，明暗主题自适应 -->
     <v-app-bar v-if="!app.contentFullscreen" flat class="border-b border-[rgba(var(--v-theme-on-surface),0.12)]">
       <v-spacer />
-      <!-- 功能按钮组：菜单搜索 / 浏览器全屏 / 主题切换 -->
+      <!-- 功能按钮组：站内消息 / 菜单搜索 / 浏览器全屏 / 主题切换 -->
+      <NoticeCenter />
       <AppSearch />
       <v-tooltip text="全屏" location="bottom">
         <template #activator="{ props }">
@@ -145,6 +146,7 @@ import { useTabsStore } from '@/stores/tabs'
 import AppSearch from '@/layout/AppSearch.vue'
 import TagsBar from '@/layout/TagsBar.vue'
 import ThemeDrawer from '@/layout/ThemeDrawer.vue'
+import NoticeCenter from '@/layout/NoticeCenter.vue'
 
 const auth = useAuthStore()
 const app = useAppStore()

@@ -1,28 +1,35 @@
 package com.marvel.module.infra.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.marvel.common.exception.BusinessException;
-import com.marvel.module.infra.jobs.JobInvokeTarget;
 import com.marvel.module.infra.entity.SysJob;
 import com.marvel.module.infra.entity.SysJobLog;
+import com.marvel.module.infra.jobs.JobInvokeTarget;
 import com.marvel.module.infra.mapper.SysJobLogMapper;
 import com.marvel.module.infra.mapper.SysJobMapper;
 import com.marvel.module.infra.service.JobScheduler;
 import com.marvel.module.infra.service.SysJobService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 定时任务管理业务实现。
  *
  * <p>关键规则：
  * <ul>
- *   <li>cron 与 invokeTarget 在保存前做基础校验（cron 合法性由 CronTrigger 构造校验）；</li>
+ *   <li>cron 与 invokeTarget 在保存前做基础校验；</li>
  *   <li>增删改/启停后同步刷新调度器，保证运行态与库内数据一致；</li>
  *   <li>删除任务时级联删除其执行日志。</li>
  * </ul>
@@ -104,7 +111,65 @@ public class SysJobServiceImpl extends ServiceImpl<SysJobMapper, SysJob> impleme
                 .last("LIMIT " + Math.max(1, Math.min(limit, 200))));
     }
 
-    /** 保存前基础校验：cron 表达式合法性（CronTrigger 构造校验）与必填项 */
+    @Override
+    public Map<String, Object> validateCron(String cron) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        if (!StringUtils.hasText(cron)) {
+            result.put("valid", false);
+            result.put("message", "cron 表达式不能为空");
+            return result;
+        }
+        try {
+            CronExpression expression = CronExpression.parse(cron);
+            List<String> nextTimes = new ArrayList<>();
+            LocalDateTime time = LocalDateTime.now();
+            for (int i = 0; i < 5; i++) {
+                time = expression.next(time);
+                if (time == null) {
+                    break;
+                }
+                nextTimes.add(time.toString());
+            }
+            result.put("valid", true);
+            result.put("nextTimes", nextTimes);
+        } catch (IllegalArgumentException e) {
+            result.put("valid", false);
+            result.put("message", e.getMessage());
+        }
+        return result;
+    }
+
+    @Override
+    public IPage<SysJobLog> pageLogs(long pageNum, long pageSize, Long jobId, String jobName, String status,
+                                     LocalDateTime beginTime, LocalDateTime endTime) {
+        return jobLogMapper.selectPage(new Page<>(pageNum, pageSize),
+                new LambdaQueryWrapper<SysJobLog>()
+                        .eq(jobId != null, SysJobLog::getJobId, jobId)
+                        .like(StringUtils.hasText(jobName), SysJobLog::getJobName, jobName)
+                        .eq(StringUtils.hasText(status), SysJobLog::getStatus, status)
+                        .ge(beginTime != null, SysJobLog::getStartTime, beginTime)
+                        .le(endTime != null, SysJobLog::getStartTime, endTime)
+                        .orderByDesc(SysJobLog::getJobLogId));
+    }
+
+    @Override
+    public void cleanLogs() {
+        jobLogMapper.delete(new LambdaQueryWrapper<>());
+    }
+
+    @Override
+    public long retryLog(Long jobLogId) {
+        SysJobLog logRow = jobLogMapper.selectById(jobLogId);
+        if (logRow == null) {
+            throw new BusinessException("执行日志不存在");
+        }
+        if (!"1".equals(logRow.getStatus())) {
+            throw new BusinessException("仅失败记录支持重试");
+        }
+        return runOnce(logRow.getJobId());
+    }
+
+    /** 保存前基础校验：cron 表达式合法性（CronExpression 解析）与必填项 */
     private void validate(SysJob job) {
         if (!StringUtils.hasText(job.getJobName())) {
             throw new BusinessException("任务名称不能为空");
@@ -116,7 +181,7 @@ public class SysJobServiceImpl extends ServiceImpl<SysJobMapper, SysJob> impleme
             throw new BusinessException("cron 表达式不能为空");
         }
         try {
-            new org.springframework.scheduling.support.CronTrigger(job.getCronExpression());
+            CronExpression.parse(job.getCronExpression());
         } catch (IllegalArgumentException e) {
             throw new BusinessException("cron 表达式非法：" + e.getMessage());
         }

@@ -69,6 +69,26 @@
         >
           批量删除{{ selected.length ? `(${selected.length})` : '' }}
         </v-btn>
+        <v-btn
+          v-if="auth.hasPerm('system:user:export')"
+          color="primary"
+          variant="tonal"
+          prepend-icon="mdi-file-excel-outline"
+          rounded="lg"
+          @click="onExport"
+        >
+          导出
+        </v-btn>
+        <v-btn
+          v-if="auth.hasPerm('system:user:import')"
+          color="primary"
+          variant="tonal"
+          prepend-icon="mdi-file-upload-outline"
+          rounded="lg"
+          @click="importDialog = true"
+        >
+          导入
+        </v-btn>
         <v-tooltip text="刷新" location="bottom">
           <template #activator="{ props }">
             <v-btn v-bind="props" icon="mdi-refresh" variant="text" rounded="lg" :loading="loading" @click="load" />
@@ -150,6 +170,37 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog v-model="importDialog" width="640">
+      <v-card title="导入用户" rounded="xl">
+        <v-card-text>
+          <v-alert type="info" variant="tonal" density="compact" class="mb-3">
+            支持 .xlsx；列顺序：用户名、昵称、部门ID、邮箱、手机号、状态(0正常1停用)、初始密码。单次最多 2000 行，逐行校验，失败行会返回原因。
+          </v-alert>
+          <v-file-input v-model="importFile" label="选择 Excel 文件" accept=".xlsx" density="compact" hide-details />
+          <div v-if="importResult" class="mt-3 text-body-2">
+            <div>总计 {{ importResult.total }}，成功 {{ importResult.success }}，失败 {{ importResult.failed }}</div>
+            <v-table v-if="importResult.errors && importResult.errors.length" density="compact" class="mt-2">
+              <thead>
+                <tr><th>行号</th><th>用户名</th><th>原因</th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="(err, i) in importResult.errors" :key="i">
+                  <td>{{ err.row }}</td>
+                  <td>{{ err.username }}</td>
+                  <td>{{ err.message }}</td>
+                </tr>
+              </tbody>
+            </v-table>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="importDialog = false">关闭</v-btn>
+          <v-btn color="primary" :loading="importing" :disabled="!importFile" @click="onImport">开始导入</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{ snack.text }}</v-snackbar>
   </div>
 </template>
@@ -160,7 +211,7 @@ import SearchPanel from '@/components/SearchPanel.vue'
 import ListPanel from '@/components/ListPanel.vue'
 import ColumnSettings, { type ColumnDef } from '@/components/ColumnSettings.vue'
 import { useAuthStore } from '@/stores/auth'
-import { http } from '@/api/request'
+import instance, { http } from '@/api/request'
 import { clearObject } from '@/utils/object'
 import type {
   PageResult,
@@ -207,6 +258,60 @@ const query = reactive<UserQuery>({
 const form = reactive<Partial<SysUserRow> & { password?: string }>({})
 
 const snack = reactive({ show: false, text: '', color: 'success' })
+
+const importDialog = ref(false)
+const importFile = ref<File | File[] | null>(null)
+const importing = ref(false)
+interface ImportError { row: number; username: string; message: string }
+interface ImportResult { total: number; success: number; failed: number; errors: ImportError[] }
+const importResult = ref<ImportResult | null>(null)
+
+/** 导出当前筛选条件下的用户（携带 Token 下载二进制） */
+async function onExport(): Promise<void> {
+  try {
+    const resp = await instance.get('/system/user/export', {
+      params: {
+        username: query.username,
+        nickname: query.nickname,
+        status: query.status,
+        deptId: query.deptId,
+      },
+      responseType: 'blob',
+    })
+    const url = URL.createObjectURL(resp.data as Blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'users_' + Date.now() + '.xlsx'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  } catch (e) {
+    notify(e instanceof Error ? e.message : '导出失败', 'error')
+  }
+}
+
+/** 上传 Excel 导入用户，展示成功/失败统计与失败明细 */
+async function onImport(): Promise<void> {
+  const file = Array.isArray(importFile.value) ? importFile.value[0] : importFile.value
+  if (!file) return
+  importing.value = true
+  importResult.value = null
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    importResult.value = await http.post<ImportResult>('/system/user/import', fd)
+    notify(
+      '导入完成：成功 ' + importResult.value.success + '，失败 ' + importResult.value.failed,
+      importResult.value.failed ? 'error' : 'success',
+    )
+    void load()
+  } catch (e) {
+    notify(e instanceof Error ? e.message : '导入失败', 'error')
+  } finally {
+    importing.value = false
+  }
+}
 
 /** 列定义（列设置弹层可调显隐/固定/顺序），表格 headers 由其计算 */
 const columns = ref<ColumnDef[]>([

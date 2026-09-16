@@ -6,15 +6,21 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.marvel.common.result.R;
 import com.marvel.module.system.dto.SysRoleVO;
+import com.marvel.module.system.excel.UserExcelService;
 import com.marvel.module.system.entity.SysUser;
 import com.marvel.module.system.service.SysRoleService;
 import com.marvel.module.system.service.SysUserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +38,7 @@ public class SysUserController {
 
     private final SysUserService userService;
     private final SysRoleService roleService;
+    private final UserExcelService userExcelService;
 
     /** 分页查询用户列表，支持用户名/昵称模糊、状态精确、部门及其下级过滤 */
     @SaCheckPermission("system:user:list")
@@ -131,5 +138,32 @@ public class SysUserController {
         return R.ok(roleService.list().stream()
                 .map(r -> new SysRoleVO(r.getRoleId(), r.getRoleName()))
                 .toList());
+    }
+
+    /** 导出用户（Excel，受数据权限约束） */
+    @SaCheckPermission("system:user:export")
+    @Log(title = "用户管理", businessType = Log.BusinessType.EXPORT)
+    @GetMapping("/export")
+    public void export(@RequestParam(required = false) String username,
+                       @RequestParam(required = false) String nickname,
+                       @RequestParam(required = false) String status,
+                       @RequestParam(required = false) Long deptId,
+                       HttpServletResponse response) throws IOException {
+        List<SysUser> users = userService.listForExport(username, nickname, status, deptId);
+        String filename = "users_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")) + ".xlsx";
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+        userExcelService.export(users, response.getOutputStream());
+    }
+
+    /** 导入用户（Excel），返回成功/失败统计与失败明细 */
+    @SaCheckPermission("system:user:import")
+    @Log(title = "用户管理", businessType = Log.BusinessType.IMPORT)
+    @PostMapping("/import")
+    public R<Map<String, Object>> importUsers(@RequestParam("file") MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            return R.fail("导入文件不能为空");
+        }
+        return R.ok(userExcelService.importUsers(file.getInputStream()));
     }
 }

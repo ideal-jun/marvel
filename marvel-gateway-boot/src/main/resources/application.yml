@@ -50,6 +50,10 @@ marvel:
   storage:
     local:
       path: ${UPLOAD_PATH:./uploads}
+  job:
+    pool-size: ${JOB_POOL_SIZE:4}
+    # 单次触发失败后的自动重试次数（不含首次执行）
+    retry-times: ${JOB_RETRY_TIMES:1}
   log:
     # 审计日志保留天数，<=0 关闭清理
     retention-days: ${LOG_RETENTION_DAYS:90}

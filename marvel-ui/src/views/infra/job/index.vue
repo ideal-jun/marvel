@@ -93,7 +93,18 @@
         <v-card-text>
           <v-text-field v-model="form.jobName" label="任务名称" />
           <v-text-field v-model="form.invokeTarget" label="调用目标（如 sampleJob.run）" />
-          <v-text-field v-model="form.cronExpression" label="cron 表达式（如 0 * * * * ?）" />
+          <div class="flex items-center gap-2">
+            <v-text-field v-model="form.cronExpression" label="cron 表达式（如 0 * * * * ?）" hide-details />
+            <v-btn variant="tonal" rounded="lg" @click="previewCron">预览</v-btn>
+          </div>
+          <div
+            v-if="cronPreview"
+            class="text-caption mt-1 mb-2"
+            :class="cronPreview.valid ? 'text-success' : 'text-error'"
+          >
+            <template v-if="cronPreview.valid">未来执行：{{ (cronPreview.nextTimes || []).join('、') }}</template>
+            <template v-else>{{ cronPreview.message }}</template>
+          </div>
           <v-radio-group v-model="form.status" inline label="状态">
             <v-radio label="运行中" value="0" />
             <v-radio label="暂停" value="1" />
@@ -111,17 +122,20 @@
       </v-card>
     </v-dialog>
 
-    <!-- 执行日志对话框 -->
-    <v-dialog v-model="logDialog" width="720">
+    <!-- 执行日志对话框：服务端分页 + 失败重试 + 清空 -->
+    <v-dialog v-model="logDialog" width="860">
       <v-card title="执行日志" rounded="xl">
         <v-card-text>
-          <v-data-table
+          <v-data-table-server
             :headers="logHeaders"
             :items="logs"
-            item-value="jobLogId"
+            :items-length="logTotal"
+            :items-per-page="logQuery.pageSize"
+            :page="logQuery.pageNum"
             :loading="logLoading"
+            item-value="jobLogId"
             hover
-            :items-per-page="8"
+            @update:options="onLogOptions"
           >
             <template #item.status="{ item }">
               <v-chip :color="item.status === '0' ? 'success' : 'error'" size="small" label>
@@ -132,9 +146,26 @@
               {{ item.endTime }}
               <div v-if="item.errorMsg" class="text-caption text-error">{{ item.errorMsg }}</div>
             </template>
-          </v-data-table>
+            <template #item.actions="{ item }">
+              <v-tooltip v-if="item.status === '1' && auth.hasPerm('infra:job:run')" text="重试">
+                <template #activator="{ props: p }">
+                  <v-icon v-bind="p" icon="mdi-refresh" size="18" class="text-primary" @click="onRetry(item)" />
+                </template>
+              </v-tooltip>
+            </template>
+          </v-data-table-server>
         </v-card-text>
         <v-card-actions>
+          <v-btn
+            v-if="auth.hasPerm('infra:job:remove')"
+            color="error"
+            variant="tonal"
+            prepend-icon="mdi-delete-sweep-outline"
+            rounded="lg"
+            @click="onCleanLogs"
+          >
+            清空日志
+          </v-btn>
           <v-spacer />
           <v-btn @click="logDialog = false">关闭</v-btn>
         </v-card-actions>
@@ -152,7 +183,7 @@ import ListPanel from '@/components/ListPanel.vue'
 import { useAuthStore } from '@/stores/auth'
 import { http } from '@/api/request'
 import { clearObject } from '@/utils/object'
-import type { SysJobLogRow, SysJobRow } from '@/types/api'
+import type { PageResult, SysJobLogRow, SysJobRow } from '@/types/api'
 
 const STATUS_OPTIONS = [
   { title: '运行中', value: '0' },
@@ -166,6 +197,11 @@ const dialog = ref(false)
 const logDialog = ref(false)
 const logLoading = ref(false)
 const logs = ref<SysJobLogRow[]>([])
+const logTotal = ref(0)
+const currentLogJobId = ref<number | null>(null)
+const logQuery = reactive({ pageNum: 1, pageSize: 10 })
+interface CronPreview { valid: boolean; nextTimes?: string[]; message?: string }
+const cronPreview = ref<CronPreview | null>(null)
 const query = reactive({ jobName: '' as string | null, status: '' as string | null })
 const form = reactive<Partial<SysJobRow>>({})
 const snack = reactive({ show: false, text: '', color: 'success' })
@@ -184,6 +220,7 @@ const logHeaders = [
   { title: '状态', key: 'status', width: 80 },
   { title: '开始时间', key: 'startTime', width: 180 },
   { title: '结束时间', key: 'endTime' },
+  { title: '操作', key: 'actions', width: 80, sortable: false },
 ].map((h) => ({ nowrap: true, ...h }))
 
 function notify(text: string, color: 'success' | 'error' = 'success'): void {
@@ -210,12 +247,14 @@ function onReset(): void {
 function openAdd(): void {
   clearObject(form)
   Object.assign(form, { status: '1', jobGroup: 'DEFAULT' })
+  cronPreview.value = null
   dialog.value = true
 }
 
 function openEdit(item: SysJobRow): void {
   clearObject(form)
   Object.assign(form, item)
+  cronPreview.value = null
   dialog.value = true
 }
 
@@ -227,6 +266,7 @@ async function onSave(): Promise<void> {
       await http.post<null>('/infra/job', form)
     }
     dialog.value = false
+    cronPreview.value = null
     notify('保存成功')
     void load()
   } catch (e) {
@@ -267,15 +307,67 @@ async function onDelete(item: SysJobRow): Promise<void> {
   }
 }
 
-async function openLogs(item: SysJobRow): Promise<void> {
-  logDialog.value = true
+async function previewCron(): Promise<void> {
+  if (!form.cronExpression) {
+    cronPreview.value = null
+    return
+  }
+  try {
+    cronPreview.value = await http.get<CronPreview>('/infra/job/validate-cron', {
+      params: { cron: form.cronExpression },
+    })
+  } catch (e) {
+    cronPreview.value = { valid: false, message: e instanceof Error ? e.message : '校验失败' }
+  }
+}
+
+async function loadLogs(): Promise<void> {
   logLoading.value = true
   try {
-    logs.value = await http.get<SysJobLogRow[]>(`/infra/job/logs/${item.jobId}`)
+    const page = await http.get<PageResult<SysJobLogRow>>('/infra/job/log/page', {
+      params: { jobId: currentLogJobId.value, ...logQuery },
+    })
+    logs.value = page.records
+    logTotal.value = page.total
   } catch (e) {
     notify(e instanceof Error ? e.message : '加载失败', 'error')
   } finally {
     logLoading.value = false
+  }
+}
+
+function onLogOptions(opts: { page: number; itemsPerPage: number }): void {
+  logQuery.pageNum = opts.page
+  logQuery.pageSize = opts.itemsPerPage
+  void loadLogs()
+}
+
+async function openLogs(item: SysJobRow): Promise<void> {
+  currentLogJobId.value = item.jobId
+  logQuery.pageNum = 1
+  logDialog.value = true
+  await loadLogs()
+}
+
+async function onRetry(item: SysJobLogRow): Promise<void> {
+  try {
+    const cost = await http.post<number>('/infra/job/retry/' + item.jobLogId)
+    notify('重试成功，耗时 ' + cost + 'ms')
+    void loadLogs()
+    void load()
+  } catch (e) {
+    notify(e instanceof Error ? e.message : '重试失败', 'error')
+  }
+}
+
+async function onCleanLogs(): Promise<void> {
+  if (!window.confirm('确认清空全部执行日志？')) return
+  try {
+    await http.delete<null>('/infra/job/log/clean')
+    notify('已清空')
+    void loadLogs()
+  } catch (e) {
+    notify(e instanceof Error ? e.message : '清空失败', 'error')
   }
 }
 

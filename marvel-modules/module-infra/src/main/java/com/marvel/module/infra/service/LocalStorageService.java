@@ -5,6 +5,8 @@ import com.marvel.module.infra.entity.SysFile;
 import com.marvel.module.infra.mapper.SysFileMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -88,6 +90,39 @@ public class LocalStorageService implements StorageService {
         record.setContentType(contentType);
         fileMapper.insert(record);
         return url;
+    }
+
+    @Override
+    public Resource loadAsResource(String filePath) {
+        Path path = resolveSafely(filePath);
+        if (!Files.exists(path) || Files.isDirectory(path)) {
+            throw new BusinessException("文件不存在");
+        }
+        return new FileSystemResource(path);
+    }
+
+    @Override
+    public void delete(String filePath) {
+        Path path = resolveSafely(filePath);
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            log.error("文件删除失败: {}", path, e);
+            throw new BusinessException("文件删除失败");
+        }
+    }
+
+    /** 把 /uploads/xxx 安全解析到存储根目录之内，拒绝路径穿越与非法前缀 */
+    private Path resolveSafely(String filePath) {
+        if (!StringUtils.hasText(filePath) || !filePath.startsWith("/uploads/")) {
+            throw new BusinessException("非法的文件路径");
+        }
+        Path rootPath = Paths.get(basePath).toAbsolutePath().normalize();
+        Path target = rootPath.resolve(filePath.substring("/uploads/".length())).normalize();
+        if (!target.startsWith(rootPath)) {
+            throw new BusinessException("非法的文件路径");
+        }
+        return target;
     }
 
     /**

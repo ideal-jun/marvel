@@ -1,6 +1,8 @@
 package com.marvel.module.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.marvel.common.annotation.Log;
 import com.marvel.common.result.R;
 import com.marvel.module.system.entity.SysNotice;
@@ -9,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 通知公告接口，路径前缀 /system/**（与未来网关路由一致）。
@@ -54,6 +57,36 @@ public class SysNoticeController {
     @DeleteMapping("/{noticeIds}")
     public R<Void> remove(@PathVariable List<Long> noticeIds) {
         noticeService.deleteNotices(noticeIds);
+        return R.ok();
+    }
+
+    /* ---------------- 站内消息（登录即可，个人维度） ---------------- */
+
+    /** 我的消息：已发布公告 + 当前用户已读状态 */
+    @GetMapping("/my")
+    public R<IPage<Map<String, Object>>> my(@RequestParam(defaultValue = "1") long pageNum,
+                                            @RequestParam(defaultValue = "10") long pageSize,
+                                            @RequestParam(defaultValue = "false") boolean onlyUnread) {
+        return R.ok(noticeService.myNotices(StpUtil.getLoginIdAsLong(), pageNum, pageSize, onlyUnread));
+    }
+
+    /** 未读消息数（用于顶栏红点） */
+    @GetMapping("/unread-count")
+    public R<Long> unreadCount() {
+        return R.ok(noticeService.unreadCount(StpUtil.getLoginIdAsLong()));
+    }
+
+    /** 标记单条消息已读（幂等） */
+    @PostMapping("/read/{noticeId}")
+    public R<Void> read(@PathVariable Long noticeId) {
+        noticeService.markRead(StpUtil.getLoginIdAsLong(), noticeId);
+        return R.ok();
+    }
+
+    /** 全部标记已读 */
+    @PostMapping("/read-all")
+    public R<Void> readAll() {
+        noticeService.markAllRead(StpUtil.getLoginIdAsLong());
         return R.ok();
     }
 }

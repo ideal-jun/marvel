@@ -4,12 +4,15 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.marvel.common.constant.Constants;
 import com.marvel.common.exception.BusinessException;
+import com.marvel.framework.config.CacheConfig;
 import com.marvel.module.system.entity.SysDictData;
 import com.marvel.module.system.entity.SysDictType;
 import com.marvel.module.system.mapper.SysDictDataMapper;
 import com.marvel.module.system.mapper.SysDictTypeMapper;
 import com.marvel.module.system.service.SysDictService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -51,6 +54,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDictTy
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.CACHE_DICT_DATA, allEntries = true)
     public void updateType(SysDictType dictType) {
         SysDictType db = getById(dictType.getDictId());
         if (db == null) {
@@ -68,6 +72,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDictTy
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.CACHE_DICT_DATA, allEntries = true)
     public void deleteType(Long dictId) {
         SysDictType type = getById(dictId);
         if (type == null) {
@@ -91,6 +96,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDictTy
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.CACHE_DICT_DATA, allEntries = true)
     public void createData(SysDictData dictData) {
         checkDataValueUnique(dictData, null);
         dictData.setDictCode(null);
@@ -99,6 +105,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDictTy
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.CACHE_DICT_DATA, allEntries = true)
     public void updateData(SysDictData dictData) {
         checkDataValueUnique(dictData, dictData.getDictCode());
         dictDataMapper.updateById(dictData);
@@ -106,6 +113,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDictTy
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.CACHE_DICT_DATA, allEntries = true)
     public void deleteData(List<Long> dictCodes) {
         if (dictCodes != null && !dictCodes.isEmpty()) {
             dictDataMapper.deleteByIds(dictCodes);
@@ -113,6 +121,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDictTy
     }
 
     @Override
+    @Cacheable(cacheNames = CacheConfig.CACHE_DICT_DATA, key = "#dictType")
     public List<SysDictData> listEnabledData(String dictType) {
         return dictDataMapper.selectList(new LambdaQueryWrapper<SysDictData>()
                 .eq(SysDictData::getDictType, dictType)

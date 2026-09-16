@@ -39,7 +39,7 @@
           :rules="[rules.required]"
           class="mb-1"
         />
-        <div class="flex items-start gap-3">
+        <div v-if="captchaEnabled" class="flex items-start gap-3">
           <v-text-field
             v-model="form.code"
             label="验证码"
@@ -90,6 +90,7 @@ const auth = useAuthStore()
 
 const loading = ref(false)
 const captcha = ref<CaptchaVO>({ uuid: '', img: '' })
+const captchaEnabled = ref(true)
 const showError = ref(false)
 const errorMessage = ref('')
 const form = reactive({ username: 'admin', password: '', code: '', uuid: '' })
@@ -108,6 +109,15 @@ async function loadCaptcha(): Promise<void> {
   form.code = ''
 }
 
+/** 读取登录页配置：验证码关闭时隐藏输入框并允许空 code/uuid */
+async function loadConfig(): Promise<void> {
+  const cfg = await http.get<{ captchaEnabled: boolean }>('/auth/login-config')
+  captchaEnabled.value = cfg.captchaEnabled
+  if (captchaEnabled.value) {
+    await loadCaptcha()
+  }
+}
+
 function fail(message: string): void {
   errorMessage.value = message
   showError.value = true
@@ -117,17 +127,24 @@ async function onSubmit(): Promise<void> {
   loading.value = true
   showError.value = false
   try {
-    await auth.login({ ...form })
+    await auth.login({
+      username: form.username,
+      password: form.password,
+      code: captchaEnabled.value ? form.code : '',
+      uuid: captchaEnabled.value ? form.uuid : '',
+    })
     router.push((route.query.redirect as string) ?? '/')
   } catch (e) {
     fail(e instanceof Error ? e.message : '登录失败')
-    await loadCaptcha()
+    if (captchaEnabled.value) {
+      await loadCaptcha()
+    }
   } finally {
     loading.value = false
   }
 }
 
 onMounted(() => {
-  void loadCaptcha()
+  void loadConfig()
 })
 </script>

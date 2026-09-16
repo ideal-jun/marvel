@@ -35,6 +35,8 @@ public class CacheConfig {
 
     public static final String CACHE_USER_ROLES = "user:roles";
     public static final String CACHE_USER_PERMS = "user:perms";
+    public static final String CACHE_DICT_DATA = "dict:data";
+    public static final String CACHE_CONFIG = "config";
 
     @Bean
     public RedisCacheManager redisCacheManager(RedisConnectionFactory connectionFactory) {
@@ -60,6 +62,8 @@ public class CacheConfig {
                 BasicPolymorphicTypeValidator.builder()
                         .allowIfSubType("java.util.")
                         .allowIfSubType("java.lang.")
+                        // 仅放行本项目自有 POJO（实体/返回体），不引入第三方 gadget
+                        .allowIfSubType("com.marvel.")
                         .build(),
                 ObjectMapper.DefaultTyping.NON_FINAL,
                 JsonTypeInfo.As.PROPERTY);

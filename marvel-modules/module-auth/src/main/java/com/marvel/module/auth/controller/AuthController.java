@@ -52,6 +52,12 @@ public class AuthController {
         return R.ok(captchaService.generateCaptcha());
     }
 
+    /** 登录页配置：是否启用验证码（公开接口，供前端决定是否展示验证码输入） */
+    @GetMapping("/login-config")
+    public R<Map<String, Object>> loginConfig() {
+        return R.ok(Map.of("captchaEnabled", captchaEnabled()));
+    }
+
     /**
      * 账号密码登录。安全控制链：防爆破锁定 → 验证码校验 → 密码校验（BCrypt）→ 账号状态 → 签发 Sa-Token。
      * 成功与失败均发布登录日志事件（system 模块落库 sys_logininfor）。
@@ -73,8 +79,8 @@ public class AuthController {
     private Map<String, Object> doLogin(LoginBody body, HttpServletRequest request, String ip) {
         loginProtectService.checkLocked(body.getUsername(), ip);
 
-        // 验证码一次性使用：无论对错先消费，防止重放
-        if (!captchaService.verify(body.getUuid(), body.getCode())) {
+        // 验证码开关由系统参数 sys.captcha.enabled 控制；启用时一次性消费，防止重放
+        if (captchaEnabled() && !captchaService.verify(body.getUuid(), body.getCode())) {
             throw new BusinessException("验证码错误或已过期");
         }
 
@@ -137,6 +143,12 @@ public class AuthController {
     public R<List<?>> getRouters() {
         long userId = StpUtil.getLoginIdAsLong();
         return R.ok(List.copyOf(systemApi.getMenusByUserId(userId)));
+    }
+
+    /** 是否启用登录验证码，参数缺失或非法时按「启用」处理（安全默认） */
+    private boolean captchaEnabled() {
+        String value = systemApi.getConfigValue(Constants.CONFIG_CAPTCHA_ENABLED);
+        return value == null || Boolean.parseBoolean(value.trim());
     }
 
     /** 发布登录日志事件（system 模块监听落库） */

@@ -29,4 +29,7 @@ public final class Constants {
 
     /** Redis key 前缀 */
     public static final String CAPTCHA_KEY_PREFIX = "marvel:captcha:";
+
+    /** 系统参数：是否启用登录验证码 */
+    public static final String CONFIG_CAPTCHA_ENABLED = "sys.captcha.enabled";
 }

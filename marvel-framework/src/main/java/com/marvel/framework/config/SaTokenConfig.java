@@ -33,7 +33,7 @@ public class SaTokenConfig implements WebMvcConfigurer {
         registry.addInterceptor(new SaInterceptor(handle ->
                         SaRouter.match("/**")
                                 // 公开接口：登录、验证码（登出未登录时为幂等空操作）
-                                .notMatch("/auth/login", "/auth/captcha", "/auth/logout")
+                                .notMatch("/auth/login", "/auth/captcha", "/auth/logout", "/auth/login-config")
                                 .notMatch("/error", "/favicon.ico", "/uploads/**")
                                 // 健康检查探针公开（仅返回 UP/DOWN，不含细节）；/actuator/info 等仍需登录
                                 .notMatch("/actuator/health", "/actuator/health/**")

@@ -3,9 +3,12 @@ package com.marvel.module.system.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.marvel.common.exception.BusinessException;
+import com.marvel.framework.config.CacheConfig;
 import com.marvel.module.system.entity.SysConfig;
 import com.marvel.module.system.mapper.SysConfigMapper;
 import com.marvel.module.system.service.SysConfigService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -27,11 +30,13 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
     }
 
     @Override
+    @Cacheable(cacheNames = CacheConfig.CACHE_CONFIG, key = "#configKey")
     public SysConfig getByKey(String configKey) {
         return getOne(new LambdaQueryWrapper<SysConfig>().eq(SysConfig::getConfigKey, configKey));
     }
 
     @Override
+    @CacheEvict(cacheNames = CacheConfig.CACHE_CONFIG, allEntries = true)
     public void createConfig(SysConfig config) {
         checkKeyUnique(config.getConfigKey(), null);
         config.setConfigId(null);
@@ -39,12 +44,14 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
     }
 
     @Override
+    @CacheEvict(cacheNames = CacheConfig.CACHE_CONFIG, allEntries = true)
     public void updateConfig(SysConfig config) {
         checkKeyUnique(config.getConfigKey(), config.getConfigId());
         this.updateById(config);
     }
 
     @Override
+    @CacheEvict(cacheNames = CacheConfig.CACHE_CONFIG, allEntries = true)
     public void deleteConfigs(List<Long> configIds) {
         if (configIds != null && !configIds.isEmpty()) {
             this.removeByIds(configIds);

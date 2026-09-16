@@ -59,6 +59,22 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      */
     @Override
     public IPage<SysUser> pageUsers(long pageNum, long pageSize, String username, String nickname, String status, Long deptId) {
+        IPage<SysUser> page = this.page(new Page<>(pageNum, pageSize), buildUserQuery(username, nickname, status, deptId));
+        // 列表数据统一抹除密码密文
+        page.getRecords().forEach(u -> u.setPassword(null));
+        return page;
+    }
+
+    @Override
+    public List<SysUser> listForExport(String username, String nickname, String status, Long deptId) {
+        // 导出上限 1 万行，避免误操作一次性拉爆内存
+        List<SysUser> users = list(buildUserQuery(username, nickname, status, deptId).last("LIMIT 10000"));
+        users.forEach(u -> u.setPassword(null));
+        return users;
+    }
+
+    /** 用户列表/导出共用的查询条件：筛选 + 数据权限 */
+    private LambdaQueryWrapper<SysUser> buildUserQuery(String username, String nickname, String status, Long deptId) {
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<SysUser>()
                 .like(StringUtils.hasText(username), SysUser::getUsername, username)
                 .like(StringUtils.hasText(nickname), SysUser::getNickname, nickname)
@@ -69,10 +85,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 .orderByAsc(SysUser::getUserId);
         // 数据权限：按当前用户的 data_scope 收窄可见范围
         applyDataScope(wrapper);
-        IPage<SysUser> page = this.page(new Page<>(pageNum, pageSize), wrapper);
-        // 列表数据统一抹除密码密文
-        page.getRecords().forEach(u -> u.setPassword(null));
-        return page;
+        return wrapper;
     }
 
     @Override

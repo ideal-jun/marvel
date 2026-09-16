@@ -9,11 +9,13 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -86,5 +88,29 @@ class LocalStorageServiceTest {
         assertThat(stored).exists();
         assertThat(Files.readString(stored)).isEqualTo("PNGDATA");
         verify(fileMapper).insert(any(SysFile.class));
+    }
+
+    @Test
+    void loadAndDeleteResolveStoredFile() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "note.txt", "text/plain", "hello".getBytes());
+        String url = service.upload(file);
+
+        assertThat(service.loadAsResource(url).exists()).isTrue();
+        assertThat(service.loadAsResource(url).getContentAsString(StandardCharsets.UTF_8)).isEqualTo("hello");
+
+        service.delete(url);
+        assertThatThrownBy(() -> service.loadAsResource(url)).isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    void rejectsPathTraversalAndForeignPrefix() {
+        assertThatThrownBy(() -> service.loadAsResource("/uploads/../../etc/passwd"))
+                .isInstanceOf(BusinessException.class);
+        assertThatThrownBy(() -> service.loadAsResource("/etc/passwd"))
+                .isInstanceOf(BusinessException.class);
+        assertThatThrownBy(() -> service.loadAsResource(null))
+                .isInstanceOf(BusinessException.class);
+        assertThatThrownBy(() -> service.delete("/uploads/../../../tmp/x"))
+                .isInstanceOf(BusinessException.class);
     }
 }

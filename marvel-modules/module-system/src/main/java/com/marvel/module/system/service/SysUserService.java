@@ -11,6 +11,9 @@ public interface SysUserService extends IService<SysUser> {
 
     IPage<SysUser> pageUsers(long pageNum, long pageSize, String username, String nickname, String status, Long deptId);
 
+    /** 导出用：与列表相同的筛选条件 + 数据权限，返回全部匹配用户（不分页） */
+    List<SysUser> listForExport(String username, String nickname, String status, Long deptId);
+
     void createUser(SysUser user, List<Long> roleIds);
 
     void updateUser(SysUser user, List<Long> roleIds);

@@ -18,6 +18,6 @@ public @interface Log {
     BusinessType businessType() default BusinessType.OTHER;
 
     enum BusinessType {
-        OTHER, INSERT, UPDATE, DELETE, EXPORT, GRANT, FORCE, CLEAN
+        OTHER, INSERT, UPDATE, DELETE, IMPORT, EXPORT, GRANT, FORCE, CLEAN
     }
 }

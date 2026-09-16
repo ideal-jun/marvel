@@ -1,5 +1,6 @@
 package com.marvel.module.infra.service;
 
+import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -7,6 +8,12 @@ import org.springframework.web.multipart.MultipartFile;
  */
 public interface StorageService {
 
-    /** 返回文件访问 URL */
+    /** 上传并返回可访问的 URL */
     String upload(MultipartFile file) throws Exception;
+
+    /** 按存储路径安全加载文件（越界路径必须拒绝） */
+    Resource loadAsResource(String filePath);
+
+    /** 按存储路径删除物理文件 */
+    void delete(String filePath);
 }

@@ -18,11 +18,11 @@ public class LoginBody {
     @Size(min = 6, max = 32, message = "密码长度需在 6-32 位之间")
     private String password;
 
-    @NotBlank(message = "验证码不能为空")
+    /** 验证码（系统参数 sys.captcha.enabled=false 时可为空） */
     @Size(max = 10, message = "验证码格式不正确")
     private String code;
 
-    @NotBlank(message = "验证码标识不能为空")
+    /** 验证码标识（系统参数 sys.captcha.enabled=false 时可为空） */
     @Size(max = 64, message = "验证码标识格式不正确")
     private String uuid;
 }

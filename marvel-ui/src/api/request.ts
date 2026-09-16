@@ -19,6 +19,8 @@ instance.interceptors.request.use((config) => {
 
 instance.interceptors.response.use(
   (resp) => {
+    // 二进制下载（Excel 等）不按统一返回体解包
+    if (resp.config.responseType === 'blob') return resp
     const res = resp.data as ApiResult
     if (res.code === 200) return resp
     if (res.code === 401) {
