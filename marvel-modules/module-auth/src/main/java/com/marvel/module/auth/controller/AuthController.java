@@ -7,6 +7,7 @@ import com.marvel.api.system.event.LoginRecordEvent;
 import com.marvel.common.constant.Constants;
 import com.marvel.common.exception.BusinessException;
 import com.marvel.common.result.R;
+import com.marvel.framework.web.ClientIpResolver;
 import com.marvel.module.auth.dto.LoginBody;
 import com.marvel.module.auth.service.CaptchaService;
 import com.marvel.module.auth.service.LoginProtectService;
@@ -15,6 +16,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,12 +37,18 @@ public class AuthController {
     private final CaptchaService captchaService;
     private final LoginProtectService loginProtectService;
     private final ApplicationEventPublisher eventPublisher;
+    private final ClientIpResolver clientIpResolver;
     /** BCrypt 校验器无状态，可安全复用 */
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    /** 账号不存在时用于恒定时间比对的占位 BCrypt 密文，防止通过响应耗时枚举用户名 */
+    private static final String DUMMY_PASSWORD_HASH =
+            "$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2";
+
     /** 获取图形验证码（数学运算 SVG，答案存 Redis，2 分钟有效、一次性使用） */
     @GetMapping("/captcha")
-    public R<Map<String, String>> captcha() {
+    public R<Map<String, String>> captcha(HttpServletRequest request) {
+        loginProtectService.checkCaptchaRate(clientIpResolver.resolve(request));
         return R.ok(captchaService.generateCaptcha());
     }
 
@@ -50,7 +58,8 @@ public class AuthController {
      */
     @PostMapping("/login")
     public R<Map<String, Object>> login(@Valid @RequestBody LoginBody body, HttpServletRequest request) {
-        String ip = resolveClientIp(request);
+        String ip = clientIpResolver.resolve(request);
+        loginProtectService.checkLoginRate(ip);
         try {
             Map<String, Object> result = doLogin(body, request, ip);
             recordLogin(body.getUsername(), request, ip, "登录成功", Constants.STATUS_NORMAL);
@@ -70,7 +79,11 @@ public class AuthController {
         }
 
         SysUserDTO user = systemApi.getUserByUsername(body.getUsername());
-        if (user == null || !passwordEncoder.matches(body.getPassword(), user.getPassword())) {
+        // 恒定时间：账号不存在时也执行一次 BCrypt 校验，避免通过响应耗时枚举用户名
+        String storedHash = (user != null && StringUtils.hasText(user.getPassword()))
+                ? user.getPassword() : DUMMY_PASSWORD_HASH;
+        boolean matched = passwordEncoder.matches(body.getPassword(), storedHash);
+        if (user == null || !matched) {
             loginProtectService.recordFailure(body.getUsername(), ip);
             // 不区分「用户不存在」与「密码错误」，避免账号枚举
             throw new BusinessException("用户名或密码错误");
@@ -81,6 +94,11 @@ public class AuthController {
 
         loginProtectService.clearFailure(body.getUsername(), ip);
         StpUtil.login(user.getId());
+        // 记录会话审计信息，供「在线用户」列表展示
+        StpUtil.getSession().set("username", user.getUsername());
+        StpUtil.getSession().set("loginIp", ip);
+        StpUtil.getSession().set("loginTime", System.currentTimeMillis());
+        StpUtil.getSession().set("userAgent", request.getHeader("User-Agent"));
         return Map.of("token", StpUtil.getTokenValue());
     }
 
@@ -89,7 +107,7 @@ public class AuthController {
     public R<Void> logout(HttpServletRequest request) {
         String username = StpUtil.isLogin() ? String.valueOf(StpUtil.getLoginId()) : "anonymous";
         StpUtil.logout();
-        recordLogin(username, request, resolveClientIp(request), "退出成功", Constants.STATUS_NORMAL);
+        recordLogin(username, request, clientIpResolver.resolve(request), "退出成功", Constants.STATUS_NORMAL);
         return R.ok();
     }
 
@@ -98,6 +116,11 @@ public class AuthController {
     public R<Map<String, Object>> getInfo() {
         long userId = StpUtil.getLoginIdAsLong();
         SysUserDTO user = systemApi.getUserById(userId);
+        if (user == null) {
+            // 会话对应用户已被删除：注销幽灵会话并按未登录处理（全局异常转 401）
+            StpUtil.logout();
+            StpUtil.checkLogin();
+        }
         // 密码密文绝不外发
         user.setPassword(null);
         Set<String> roles = systemApi.getRoleKeysByUserId(userId);
@@ -167,16 +190,4 @@ public class AuthController {
         return "Other";
     }
 
-    /**
-     * 解析客户端真实 IP：优先取反向代理传递的 X-Forwarded-For 首段。
-     * 取到的值仅用于防爆破计数与日志审计，不作为业务信任来源。
-     */
-    private String resolveClientIp(HttpServletRequest request) {
-        String xff = request.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isBlank()) {
-            return xff.split(",")[0].trim();
-        }
-        String realIp = request.getHeader("X-Real-IP");
-        return realIp != null && !realIp.isBlank() ? realIp : request.getRemoteAddr();
-    }
 }

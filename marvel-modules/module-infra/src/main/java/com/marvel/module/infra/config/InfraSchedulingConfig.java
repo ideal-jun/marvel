@@ -3,6 +3,7 @@ package com.marvel.module.infra.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 /**
@@ -10,6 +11,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  * 拆分微服务时随 infra 模块整体迁移。
  */
 @Configuration
+@EnableScheduling
 public class InfraSchedulingConfig {
 
     @Bean

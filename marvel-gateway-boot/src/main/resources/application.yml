@@ -5,7 +5,7 @@ spring:
   application:
     name: marvel-admin
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/marvel?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/marvel?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false&rewriteBatchedStatements=true
     username: ${MYSQL_USER:root}
     password: ${MYSQL_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -38,8 +38,9 @@ mybatis-plus:
 sa-token:
   token-name: Authorization
   token-prefix: Bearer
-  timeout: 2592000
-  active-timeout: -1
+  # 会话有效期 7 天；连续 2 小时无操作自动失效（避免长期有效令牌被窃取后滥用）
+  timeout: 604800
+  active-timeout: 7200
   is-concurrent: true
   is-share: true
   token-style: uuid
@@ -49,19 +50,29 @@ marvel:
   storage:
     local:
       path: ${UPLOAD_PATH:./uploads}
+  log:
+    # 审计日志保留天数，<=0 关闭清理
+    retention-days: ${LOG_RETENTION_DAYS:90}
   security:
     # CORS 白名单（逗号分隔）。留空表示同源部署（开发期前端走 Vite 代理）；
     # 生产环境必须配置为前端实际域名，禁止使用 "*"
     allowed-origins: ${ALLOWED_ORIGINS:}
+    # 是否信任 X-Forwarded-For / X-Real-IP。默认 false：仅当部署在可信反向代理之后才开启，
+    # 否则客户端可伪造 IP 绕过登录防爆破锁定并污染审计日志
+    trust-forwarded-headers: ${TRUST_FORWARDED_HEADERS:false}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        # 只暴露健康检查；env/beans/heapdump/info 等一律不开放
+        include: health
   endpoint:
     health:
+      # 永不返回组件细节，避免泄露数据库/Redis 等内部信息
       show-details: never
+      probes:
+        enabled: true
 
 logging:
   level:

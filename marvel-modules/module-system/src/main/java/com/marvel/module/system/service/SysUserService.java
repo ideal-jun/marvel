@@ -15,6 +15,9 @@ public interface SysUserService extends IService<SysUser> {
 
     void updateUser(SysUser user, List<Long> roleIds);
 
+    /** 仅变更用户状态，不触碰角色关联（区别于 updateUser 的全量基本信息更新） */
+    void changeUserStatus(Long userId, String status);
+
     void deleteUsers(List<Long> userIds);
 
     void resetPassword(Long userId, String newPassword);

@@ -5,9 +5,14 @@ import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.marvel.common.exception.BusinessException;
 import com.marvel.module.system.entity.SysDept;
 import com.marvel.module.system.mapper.SysDeptMapper;
+import com.marvel.module.system.service.DataScope;
+import com.marvel.module.system.service.DataScopeService;
 import com.marvel.module.system.service.SysDeptService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import java.util.Set;
 
 import java.util.List;
 
@@ -18,7 +23,10 @@ import java.util.List;
  * 便于按任意部门聚合查询其下级，数据权限按部门过滤也依赖该字段。
  */
 @Service
+@RequiredArgsConstructor
 public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> implements SysDeptService {
+
+    private final DataScopeService dataScopeService;
 
     @Override
     public List<SysDept> listDeptTree(String deptName, String status) {
@@ -26,11 +34,23 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
                 .like(StringUtils.hasText(deptName), SysDept::getDeptName, deptName)
                 .eq(StringUtils.hasText(status), SysDept::getStatus, status)
                 .orderByAsc(SysDept::getOrderNum));
-        if (StringUtils.hasText(deptName)) {
-            // 命中子节点时保留其祖先链
+        return filterByDataScope(depts);
+    }
+
+    /** 部门列表同样受数据权限约束 */
+    private List<SysDept> filterByDataScope(List<SysDept> depts) {
+        DataScope scope = dataScopeService.current();
+        if (scope.all()) {
             return depts;
         }
-        return depts;
+        if (scope.selfUserId() != null) {
+            return List.of();
+        }
+        Set<Long> deptIds = scope.deptIds();
+        if (deptIds == null || deptIds.isEmpty()) {
+            return List.of();
+        }
+        return depts.stream().filter(d -> deptIds.contains(d.getDeptId())).toList();
     }
 
     @Override

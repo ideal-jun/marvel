@@ -26,6 +26,14 @@ public class LoginProtectService {
 
     private static final String FAIL_KEY_PREFIX = "marvel:login:fail:";
 
+    /** 验证码接口每 IP 每分钟最大请求数，防止批量拉取耗尽 Redis */
+    private static final int CAPTCHA_MAX_PER_MINUTE = 20;
+    /** 登录接口每 IP 每分钟最大请求数，与「用户名+IP」锁定互补，防止轮换用户名爆破 */
+    private static final int LOGIN_MAX_PER_MINUTE = 30;
+    /** 限流窗口 */
+    private static final Duration RATE_WINDOW = Duration.ofMinutes(1);
+    private static final String RATE_KEY_PREFIX = "marvel:rate:";
+
     private final RedisTemplate<String, Object> redisTemplate;
 
     /**
@@ -53,6 +61,27 @@ public class LoginProtectService {
     /** 登录成功：清除失败计数 */
     public void clearFailure(String username, String ip) {
         redisTemplate.delete(failKey(username, ip));
+    }
+
+    /** 验证码接口限流（按 IP，防止批量拉取验证码耗尽 Redis） */
+    public void checkCaptchaRate(String ip) {
+        checkRate("captcha", ip, CAPTCHA_MAX_PER_MINUTE);
+    }
+
+    /** 登录接口限流（按 IP，与「用户名+IP」锁定互补，防止轮换用户名爆破） */
+    public void checkLoginRate(String ip) {
+        checkRate("login", ip, LOGIN_MAX_PER_MINUTE);
+    }
+
+    private void checkRate(String action, String ip, int maxPerMinute) {
+        String key = RATE_KEY_PREFIX + action + ":" + ip;
+        Long count = redisTemplate.opsForValue().increment(key);
+        if (count != null && count == 1L) {
+            redisTemplate.expire(key, RATE_WINDOW);
+        }
+        if (count != null && count > maxPerMinute) {
+            throw new BusinessException("操作过于频繁，请稍后再试");
+        }
     }
 
     private Integer failCount(String username, String ip) {

@@ -3,10 +3,12 @@ package com.marvel.module.system.controller;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.marvel.common.annotation.Log;
 import com.marvel.common.result.R;
+import com.marvel.framework.config.CacheConfig;
 import com.marvel.module.system.entity.SysMenu;
 import com.marvel.module.system.service.SysMenuService;
 import org.springframework.util.StringUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -55,6 +57,7 @@ public class SysMenuController {
 
     @SaCheckPermission("system:menu:add")
     @Log(title = "菜单管理", businessType = Log.BusinessType.INSERT)
+    @CacheEvict(cacheNames = CacheConfig.CACHE_USER_PERMS, allEntries = true)
     @PostMapping
     public R<Void> add(@RequestBody SysMenu menu) {
         menu.setMenuId(null);
@@ -64,14 +67,24 @@ public class SysMenuController {
 
     @SaCheckPermission("system:menu:edit")
     @Log(title = "菜单管理", businessType = Log.BusinessType.UPDATE)
+    @CacheEvict(cacheNames = CacheConfig.CACHE_USER_PERMS, allEntries = true)
     @PutMapping
     public R<Void> update(@RequestBody SysMenu menu) {
+        // 防止把上级设为自身或自己的子孙，形成环导致树遍历无限递归（DoS）
+        if (menu.getMenuId() != null && menu.getMenuId().equals(menu.getParentId())) {
+            return R.fail("上级菜单不能为自身");
+        }
+        if (menu.getMenuId() != null && menu.getParentId() != null
+                && menuService.getChildMenuIds(menu.getMenuId()).contains(menu.getParentId())) {
+            return R.fail("上级菜单不能为自身的子菜单");
+        }
         menuService.updateById(menu);
         return R.ok();
     }
 
     @SaCheckPermission("system:menu:remove")
     @Log(title = "菜单管理", businessType = Log.BusinessType.DELETE)
+    @CacheEvict(cacheNames = CacheConfig.CACHE_USER_PERMS, allEntries = true)
     @DeleteMapping("/{menuId}")
     public R<Void> remove(@PathVariable Long menuId) {
         List<Long> childIds = menuService.getChildMenuIds(menuId);

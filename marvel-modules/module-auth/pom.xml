@@ -14,6 +14,12 @@
     <description>认证域：登录/登出/验证码/动态路由（未来拆为独立 auth 服务）</description>
 
     <dependencies>
+        <!-- 单元测试：JUnit5 / Mockito / AssertJ / spring-test（test scope，不进入产物） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.marvel</groupId>
             <artifactId>marvel-common</artifactId>

@@ -12,7 +12,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -98,15 +100,21 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         List<SysMenu> roots = menus.stream()
                 .filter(m -> m.getParentId() == null || !ids.contains(m.getParentId()))
                 .toList();
-        roots.forEach(root -> attachChildren(root, byParent));
+        Set<Long> visited = new HashSet<>();
+        roots.forEach(root -> attachChildren(root, byParent, visited));
         return roots;
     }
 
-    private void attachChildren(SysMenu node, Map<Long, List<SysMenu>> byParent) {
+    /** visited 防止脏数据（父子成环）导致无限递归（DoS） */
+    private void attachChildren(SysMenu node, Map<Long, List<SysMenu>> byParent, Set<Long> visited) {
+        if (!visited.add(node.getMenuId())) {
+            node.setChildren(null);
+            return;
+        }
         List<SysMenu> children = byParent.get(node.getMenuId());
         node.setChildren(children);
         if (children != null) {
-            children.forEach(child -> attachChildren(child, byParent));
+            children.forEach(child -> attachChildren(child, byParent, visited));
         }
     }
 
@@ -122,10 +130,11 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                 ? list(new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getStatus, Constants.STATUS_NORMAL)
                         .orderByAsc(SysMenu::getOrderNum))
                 : baseMapper.selectMenusByUserId(userId);
-        List<SysMenu> filtered = menus.stream()
+        // 一次性按 parentId 分组，避免原实现每层都全量过滤导致的 O(n^2)
+        Map<Long, List<SysMenu>> byParent = menus.stream()
                 .filter(m -> !Constants.MENU_TYPE_BUTTON.equals(m.getMenuType()))
-                .toList();
-        return buildTree(filtered, 0L);
+                .collect(Collectors.groupingBy(m -> m.getParentId() == null ? 0L : m.getParentId()));
+        return buildTree(byParent, 0L, new HashSet<>());
     }
 
     @Override
@@ -135,37 +144,53 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     @Override
     public List<Long> getChildMenuIds(Long menuId) {
+        // 一次取回全部菜单的 id/parentId，内存遍历，避免逐层查库（N+1）
+        List<SysMenu> all = list(new LambdaQueryWrapper<SysMenu>()
+                .select(SysMenu::getMenuId, SysMenu::getParentId));
+        Map<Long, List<Long>> childrenByParent = all.stream()
+                .filter(m -> m.getParentId() != null)
+                .collect(Collectors.groupingBy(SysMenu::getParentId,
+                        Collectors.mapping(SysMenu::getMenuId, Collectors.toList())));
         List<Long> ids = new ArrayList<>();
-        collectChildren(menuId, ids);
+        Set<Long> visited = new HashSet<>();
+        Deque<Long> stack = new ArrayDeque<>();
+        stack.push(menuId);
+        while (!stack.isEmpty()) {
+            for (Long child : childrenByParent.getOrDefault(stack.pop(), List.of())) {
+                // visited 同时防止脏数据（父子成环）导致死循环
+                if (visited.add(child)) {
+                    ids.add(child);
+                    stack.push(child);
+                }
+            }
+        }
         return ids;
     }
 
-    private void collectChildren(Long parentId, List<Long> ids) {
-        list(new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getParentId, parentId))
-                .forEach(child -> {
-                    ids.add(child.getMenuId());
-                    collectChildren(child.getMenuId(), ids);
-                });
-    }
-
-    /** 递归组装菜单树；叶子节点 children 置 null，便于前端区分展开态 */
-    private List<MenuDTO> buildTree(List<SysMenu> menus, Long parentId) {
-        List<MenuDTO> tree = new ArrayList<>();
-        menus.stream()
-                .filter(m -> parentId.equals(m.getParentId()))
+    /**
+     * 递归组装菜单树；叶子节点 children 置 null，便于前端区分展开态。
+     * 入参已按 parentId 分组，整体 O(n)；visited 防止脏数据成环导致无限递归。
+     */
+    private List<MenuDTO> buildTree(Map<Long, List<SysMenu>> byParent, Long parentId, Set<Long> visited) {
+        List<SysMenu> children = byParent.get(parentId);
+        if (children == null || children.isEmpty()) {
+            return null;
+        }
+        List<MenuDTO> tree = new ArrayList<>(children.size());
+        children.stream()
                 .sorted(Comparator.comparing(SysMenu::getOrderNum, Comparator.nullsLast(Comparator.naturalOrder())))
                 .forEach(m -> {
+                    if (!visited.add(m.getMenuId())) {
+                        return;
+                    }
                     MenuDTO dto = new MenuDTO();
                     BeanUtils.copyProperties(m, dto);
                     dto.setId(m.getMenuId());
                     dto.setParentId(m.getParentId());
                     dto.setMenuName(m.getMenuName());
-                    dto.setChildren(buildTree(menus, m.getMenuId()));
+                    dto.setChildren(buildTree(byParent, m.getMenuId(), visited));
                     tree.add(dto);
                 });
-        if (tree.isEmpty()) {
-            return null;
-        }
         return tree;
     }
 

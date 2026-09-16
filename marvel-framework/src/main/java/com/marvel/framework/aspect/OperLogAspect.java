@@ -3,6 +3,7 @@ package com.marvel.framework.aspect;
 import cn.dev33.satoken.stp.StpUtil;
 import com.marvel.api.system.event.OperLogEvent;
 import com.marvel.common.annotation.Log;
+import com.marvel.framework.web.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -39,12 +40,14 @@ public class OperLogAspect {
     private static final String[] SENSITIVE_KEYS = {"password", "oldpassword", "newpassword", "confirmpassword"};
 
     private final ApplicationEventPublisher eventPublisher;
+    private final ClientIpResolver clientIpResolver;
 
     /** Jackson 3（SB4 默认）：java.time 内置支持，日期输出 ISO 字符串 */
     private final JsonMapper jsonMapper = JsonMapper.builder().build();
 
-    public OperLogAspect(ApplicationEventPublisher eventPublisher) {
+    public OperLogAspect(ApplicationEventPublisher eventPublisher, ClientIpResolver clientIpResolver) {
         this.eventPublisher = eventPublisher;
+        this.clientIpResolver = clientIpResolver;
     }
 
     @Around("@annotation(logAnnotation)")
@@ -77,7 +80,7 @@ public class OperLogAspect {
                     request != null ? request.getRequestURI() : "",
                     serializeArgs(joinPoint.getArgs()),
                     currentUsername(),
-                    request != null ? resolveClientIp(request) : "",
+                    request != null ? clientIpResolver.resolve(request) : "",
                     status,
                     errorMsg
             ));
@@ -174,19 +177,6 @@ public class OperLogAspect {
     private HttpServletRequest currentRequest() {
         var attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         return attrs != null ? attrs.getRequest() : null;
-    }
-
-    /**
-     * 解析客户端真实 IP：优先取反向代理传递的 X-Forwarded-For 首段。
-     * 与 AuthController 的防爆破逻辑保持一致。
-     */
-    private String resolveClientIp(HttpServletRequest request) {
-        String xff = request.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isBlank()) {
-            return xff.split(",")[0].trim();
-        }
-        String realIp = request.getHeader("X-Real-IP");
-        return realIp != null && !realIp.isBlank() ? realIp : request.getRemoteAddr();
     }
 
     private String truncate(String s, int max) {

@@ -3,6 +3,7 @@ package com.marvel.module.infra.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.marvel.common.exception.BusinessException;
+import com.marvel.module.infra.jobs.JobInvokeTarget;
 import com.marvel.module.infra.entity.SysJob;
 import com.marvel.module.infra.entity.SysJobLog;
 import com.marvel.module.infra.mapper.SysJobLogMapper;
@@ -108,8 +109,8 @@ public class SysJobServiceImpl extends ServiceImpl<SysJobMapper, SysJob> impleme
         if (!StringUtils.hasText(job.getJobName())) {
             throw new BusinessException("任务名称不能为空");
         }
-        if (!StringUtils.hasText(job.getInvokeTarget()) || !job.getInvokeTarget().contains(".")) {
-            throw new BusinessException("调用目标格式应为 beanName.method");
+        if (!JobInvokeTarget.isValidFormat(job.getInvokeTarget())) {
+            throw new BusinessException("调用目标格式应为 beanName.method（仅允许字母、数字、下划线）");
         }
         if (!StringUtils.hasText(job.getCronExpression())) {
             throw new BusinessException("cron 表达式不能为空");

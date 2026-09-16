@@ -94,7 +94,7 @@ public class SysUserController {
     @Log(title = "用户管理", businessType = Log.BusinessType.UPDATE)
     @PutMapping("/resetPwd")
     public R<Void> resetPwd(@RequestParam Long userId,
-                            @RequestParam @NotBlank @Size(min = 6, max = 32) String password) {
+                            @RequestParam @NotBlank @Size(min = 8, max = 32) String password) {
         userService.resetPassword(userId, password);
         return R.ok();
     }
@@ -103,7 +103,7 @@ public class SysUserController {
     @Log(title = "用户管理", businessType = Log.BusinessType.UPDATE)
     @PutMapping("/profile/password")
     public R<Void> changePwd(@RequestParam @NotBlank String oldPassword,
-                             @RequestParam @NotBlank @Size(min = 6, max = 32) String newPassword) {
+                             @RequestParam @NotBlank @Size(min = 8, max = 32) String newPassword) {
         userService.updatePassword(StpUtil.getLoginIdAsLong(), oldPassword, newPassword);
         return R.ok();
     }
@@ -113,10 +113,7 @@ public class SysUserController {
     @Log(title = "用户管理", businessType = Log.BusinessType.UPDATE)
     @PutMapping("/changeStatus")
     public R<Void> changeStatus(@RequestParam Long userId, @RequestParam String status) {
-        SysUser user = new SysUser();
-        user.setUserId(userId);
-        user.setStatus(status);
-        userService.updateUser(user, null);
+        userService.changeUserStatus(userId, status);
         return R.ok();
     }
 

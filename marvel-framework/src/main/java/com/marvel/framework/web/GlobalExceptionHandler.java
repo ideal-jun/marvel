@@ -20,22 +20,26 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public R<Void> handleBusiness(BusinessException e) {
         log.warn("业务异常: {}", e.getMessage());
         return R.fail(e.getCode(), e.getMessage());
     }
 
     @ExceptionHandler(NotLoginException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public R<Void> handleNotLogin(NotLoginException e) {
         return R.fail(ResultCode.UNAUTHORIZED.getCode(), ResultCode.UNAUTHORIZED.getMsg());
     }
 
     @ExceptionHandler({NotPermissionException.class, NotRoleException.class})
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     public R<Void> handleNotPermission(Exception e) {
         return R.fail(ResultCode.FORBIDDEN.getCode(), ResultCode.FORBIDDEN.getMsg());
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public R<Void> handleValidation(BindException e) {
         String msg = e.getBindingResult().getFieldErrors().stream()
                 .map(f -> f.getField() + " " + f.getDefaultMessage())

@@ -32,11 +32,26 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sa-token.version>1.46.0</sa-token.version>
         <mybatis-plus.version>3.5.17</mybatis-plus.version>
-        <springdoc.version>2.8.13</springdoc.version>
+        <!-- OpenAPI/Swagger 有意不启用：避免对外暴露完整接口与权限模型（渗透测试基线）。
+             如需本地调试，可临时引入 org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1
+             并放在 dev profile 中，切勿在生产公开 /v3/api-docs 与 /swagger-ui。 -->
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- 安全修复：Sa-Token 1.46.0 BOM 把 Jackson2 降到 jackson-databind 2.13.4.1
+                 （CVE-2022-42003 / CVE-2022-42004）与 jackson-datatype-jsr310 2.11.2。
+                 显式管理项放在 import 之前，以覆盖导入 BOM 的同名管理项。 -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>2.21.5</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>2.21.5</version>
+            </dependency>
             <dependency>
                 <groupId>cn.dev33</groupId>
                 <artifactId>sa-token-spring-boot4-dependencies</artifactId>
@@ -115,4 +130,67 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <!-- ===================== 软件成分分析（SCA）=====================
+         用法：mvn -DskipTests -Psecurity-scan verify
+         产物：target/bom.json（CycloneDX SBOM）
+               target/dependency-check/（OWASP dependency-check HTML/JSON 报告）
+         CI 建议配置 NVD_API_KEY（https://nvd.nist.gov/developers/request-an-api-key），
+         未配置时 NVD 数据更新受限、扫描更慢。
+         本地只跑 SBOM 可用：mvn -Psecurity-scan verify -Ddependency-check.skip=true -->
+    <profiles>
+        <profile>
+            <id>security-scan</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.cyclonedx</groupId>
+                        <artifactId>cyclonedx-maven-plugin</artifactId>
+                        <version>2.9.3</version>
+                        <!-- 仅在聚合根执行，避免每个子模块重复生成 -->
+                        <inherited>false</inherited>
+                        <executions>
+                            <execution>
+                                <id>make-sbom</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>makeAggregateBom</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <projectType>application</projectType>
+                            <outputFormat>json</outputFormat>
+                            <outputName>bom</outputName>
+                            <includeTestScope>false</includeTestScope>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <version>13.0.0</version>
+                        <!-- 仅在聚合根执行 -->
+                        <inherited>false</inherited>
+                        <executions>
+                            <execution>
+                                <id>aggregate-scan</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>aggregate</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <failBuildOnCVSS>7</failBuildOnCVSS>
+                            <formats>HTML,JSON</formats>
+                            <suppressionFiles>
+                                <suppressionFile>dependency-check-suppressions.xml</suppressionFile>
+                            </suppressionFiles>
+                            <outputDirectory>${project.build.directory}/dependency-check</outputDirectory>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

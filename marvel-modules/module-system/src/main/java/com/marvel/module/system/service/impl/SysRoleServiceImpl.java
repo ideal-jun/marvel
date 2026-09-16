@@ -11,12 +11,16 @@ import com.marvel.module.system.entity.SysRoleMenu;
 import com.marvel.module.system.mapper.SysMenuMapper;
 import com.marvel.module.system.mapper.SysRoleMapper;
 import com.marvel.module.system.mapper.SysRoleMenuMapper;
+import com.marvel.framework.config.CacheConfig;
 import com.marvel.module.system.service.SysRoleService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -64,8 +68,13 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheConfig.CACHE_USER_ROLES, CacheConfig.CACHE_USER_PERMS}, allEntries = true)
     public void updateRole(SysRole role) {
-        if (Constants.SUPER_ADMIN_ROLE.equals(getById(role.getRoleId()).getRoleKey())) {
+        SysRole db = getById(role.getRoleId());
+        if (db == null) {
+            throw new BusinessException("角色不存在");
+        }
+        if (Constants.SUPER_ADMIN_ROLE.equals(db.getRoleKey())) {
             throw new BusinessException("不允许修改超级管理员角色");
         }
         checkRoleKeyUnique(role.getRoleKey(), role.getRoleId());
@@ -76,6 +85,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheConfig.CACHE_USER_ROLES, CacheConfig.CACHE_USER_PERMS}, allEntries = true)
     public void deleteRoles(List<Long> roleIds) {
         for (Long roleId : roleIds) {
             SysRole role = getById(roleId);
@@ -88,6 +98,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     }
 
     @Override
+    @Cacheable(cacheNames = CacheConfig.CACHE_USER_ROLES, key = "#userId")
     public Set<String> getRoleKeysByUserId(Long userId) {
         return listRolesByUserId(userId).stream().map(SysRole::getRoleKey).collect(java.util.stream.Collectors.toSet());
     }
@@ -97,10 +108,14 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
      * 超级管理员返回通配权限 {@code *:*:*}，由注解校验时匹配任意权限串。
      */
     @Override
+    @Cacheable(cacheNames = CacheConfig.CACHE_USER_PERMS, key = "#userId")
     public Set<String> getPermissionsByUserId(Long userId) {
         Set<String> roleKeys = getRoleKeysByUserId(userId);
         if (roleKeys.contains(Constants.SUPER_ADMIN_ROLE)) {
-            return Set.of("*:*:*");
+            // 返回可变集合，保证 Redis 缓存序列化器可以正确还原
+            Set<String> wildcard = new HashSet<>();
+            wildcard.add("*:*:*");
+            return wildcard;
         }
         return new HashSet<>(menuMapper.selectPermsByUserId(userId));
     }
@@ -112,15 +127,18 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     }
 
     private void saveRoleMenus(Long roleId, List<Long> menuIds) {
-        if (menuIds == null) {
+        if (menuIds == null || menuIds.isEmpty()) {
             return;
         }
-        menuIds.forEach(menuId -> {
+        List<SysRoleMenu> rows = new ArrayList<>(menuIds.size());
+        for (Long menuId : menuIds) {
             SysRoleMenu rm = new SysRoleMenu();
             rm.setRoleId(roleId);
             rm.setMenuId(menuId);
-            roleMenuMapper.insert(rm);
-        });
+            rows.add(rm);
+        }
+        // 批量插入，避免逐条往返数据库
+        roleMenuMapper.insert(rows);
     }
 
     private void checkRoleKeyUnique(String roleKey, Long excludeRoleId) {

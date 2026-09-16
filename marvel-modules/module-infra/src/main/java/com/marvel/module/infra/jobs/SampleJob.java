@@ -1,5 +1,6 @@
 package com.marvel.module.infra.jobs;
 
+import com.marvel.common.annotation.JobTarget;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 public class SampleJob {
 
     /** 演示方法：仅打印日志，用于验证调度链路 */
+    @JobTarget
     public void run() {
         log.info("[sampleJob] 演示任务执行于 {}", java.time.LocalDateTime.now());
     }

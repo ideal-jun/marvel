@@ -14,6 +14,12 @@
     <description>系统管理域：用户/角色/菜单/部门（未来拆为 system 服务）</description>
 
     <dependencies>
+        <!-- 单元测试：JUnit5 / Mockito / AssertJ / spring-test（test scope） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.marvel</groupId>
             <artifactId>marvel-common</artifactId>

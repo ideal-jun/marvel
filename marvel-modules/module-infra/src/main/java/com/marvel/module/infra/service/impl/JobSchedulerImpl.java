@@ -1,6 +1,8 @@
 package com.marvel.module.infra.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.marvel.common.annotation.JobTarget;
+import com.marvel.module.infra.jobs.JobInvokeTarget;
 import com.marvel.common.exception.BusinessException;
 import com.marvel.module.infra.entity.SysJob;
 import com.marvel.module.infra.entity.SysJobLog;
@@ -9,7 +11,9 @@ import com.marvel.module.infra.mapper.SysJobMapper;
 import com.marvel.module.infra.service.JobScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
@@ -125,14 +129,18 @@ public class JobSchedulerImpl implements JobScheduler {
      * 目标 Bean 必须托管在 Spring 容器中（如内置的 sampleJob）。
      */
     private void invokeTarget(String invokeTarget) throws Exception {
-        if (invokeTarget == null || !invokeTarget.contains(".")) {
-            throw new IllegalArgumentException("调用目标格式应为 beanName.method");
+        if (!JobInvokeTarget.isValidFormat(invokeTarget)) {
+            throw new IllegalArgumentException("调用目标格式应为 beanName.method（仅允许字母、数字、下划线）");
         }
-        int dot = invokeTarget.lastIndexOf('.');
-        String beanName = invokeTarget.substring(0, dot);
-        String methodName = invokeTarget.substring(dot + 1);
-        Object bean = applicationContext.getBean(beanName);
-        Method method = bean.getClass().getMethod(methodName);
+        String target = invokeTarget.trim();
+        Object bean = applicationContext.getBean(JobInvokeTarget.beanName(target));
+        Method method = bean.getClass().getMethod(JobInvokeTarget.methodName(target));
+        // invokeTarget 来自数据库/管理接口，属用户可控输入：仅允许显式标注 @JobTarget 的
+        // 公开无参方法，避免调用容器内任意 Bean 的任意无参方法（不安全反射，CWE-470）。
+        Method specific = AopUtils.getMostSpecificMethod(method, AopUtils.getTargetClass(bean));
+        if (!AnnotatedElementUtils.hasAnnotation(specific, JobTarget.class)) {
+            throw new IllegalArgumentException("调用目标未授权（缺少 @JobTarget）：" + target);
+        }
         method.invoke(bean);
     }
 

@@ -27,7 +27,8 @@ public class SysConfigController {
         return R.ok(configService.listConfigs(configName, configKey, null));
     }
 
-    /** 按键名取值：供业务/前端读取参数（登录即可） */
+    /** 按键名取值（需 system:config:query 权限，避免任意登录用户读取系统参数） */
+    @SaCheckPermission("system:config:query")
     @GetMapping("/key/{configKey}")
     public R<String> value(@PathVariable String configKey) {
         SysConfig config = configService.getByKey(configKey);
