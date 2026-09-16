@@ -23,7 +23,7 @@
   "devDependencies": {
     "@types/nprogress": "^0.2.3",
     "@unocss/preset-wind4": "^66.8.1",
-    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitejs/plugin-vue": "^6.0.8",
     "@vue/test-utils": "^2.5.0",
     "jsdom": "^30.0.1",
     "sass": "^1.83.0",
