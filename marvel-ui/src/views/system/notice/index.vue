@@ -116,7 +116,7 @@ const typeOptions = [
   { title: '通知', value: '1' },
   { title: '公告', value: '2' },
 ]
-const query = reactive({ title: '' as string | null, type: '' as string | null })
+const query = reactive({ title: '' as string | null, type: null })
 const form = reactive<Partial<SysNoticeRow>>({})
 const snack = reactive({ show: false, text: '', color: 'success' })
 

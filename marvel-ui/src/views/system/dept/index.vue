@@ -117,7 +117,7 @@ const rows = ref<SysDeptRow[]>([])
 const loading = ref(false)
 const dialog = ref(false)
 const parentOptions = ref<SysDeptRow[]>([])
-const query = reactive({ deptName: '' as string | null, status: '' as string | null })
+const query = reactive({ deptName: '' as string | null, status: null })
 const form = reactive<Partial<SysDeptRow>>({})
 const snack = reactive({ show: false, text: '', color: 'success' })
 

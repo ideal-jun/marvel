@@ -202,7 +202,7 @@ const currentLogJobId = ref<number | null>(null)
 const logQuery = reactive({ pageNum: 1, pageSize: 10 })
 interface CronPreview { valid: boolean; nextTimes?: string[]; message?: string }
 const cronPreview = ref<CronPreview | null>(null)
-const query = reactive({ jobName: '' as string | null, status: '' as string | null })
+const query = reactive({ jobName: '' as string | null, status: null })
 const form = reactive<Partial<SysJobRow>>({})
 const snack = reactive({ show: false, text: '', color: 'success' })
 

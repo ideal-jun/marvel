@@ -166,7 +166,7 @@ const dialog = ref(false)
 /** 展开节点 id 集合；懒加载模式下默认折叠 */
 const expandedIds = ref<Set<string>>(new Set())
 const parentOptions = ref<SysMenuRow[]>([])
-const query = reactive({ menuName: '' as string | null, status: '' as string | null })
+const query = reactive({ menuName: '' as string | null, status: null })
 const form = reactive<Partial<SysMenuRow>>({})
 const snack = reactive({ show: false, text: '', color: 'success' })
 

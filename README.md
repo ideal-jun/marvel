@@ -27,6 +27,19 @@ Spring Boot 4 模块化单体后台管理系统，按微服务边界拆分模块
   提供 reset 与组件级 CSS 变量）；不要引入第三方 reset（unlayered 规则会压过 layer 内的
   组件样式）。 + Vue Router
 
+## 前端表单约定
+
+`v-model` 的空值必须区分控件类型，否则 Vuetify 会误判为「已选中」，把空状态下拉渲染成
+已填充样式（标签浮到边框、框内空白）：
+
+- **单选下拉**（`v-select` 等）无默认值时初始值绑定 `null`；不能是空串 `''` 或
+  `undefined`——两者都会被 `VSelect` 内部 `wrapInArray` 包装成非空数组，
+  使 `isDirty` 为真（源码 `VSelect.js` 的 `const isDirty = model.value.length > 0`）；
+- **多选下拉**初始值绑定空数组 `[]`；
+- **重置逻辑**与初始值保持一致：单选写回 `null`、多选写回 `[]`，对话框表单在
+  `clearObject`（`delete` 字段）之后需对下拉字段显式赋 `null`；
+- 文本输入框（`v-text-field`）用空串 `''` 或 `null` 均可，不受此限制。
+
 ## 模块结构（= 未来微服务边界）
 
 ```

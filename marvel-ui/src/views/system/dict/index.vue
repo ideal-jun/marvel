@@ -27,6 +27,9 @@
         <v-select
           v-model="typeQuery.status"
           :items="STATUS_OPTIONS"
+          item-props
+          item-title="title"
+          item-value="value"
           label="状态"
           density="compact"
           hide-details
@@ -208,13 +211,19 @@ const STATUS_OPTIONS = [
   { title: '停用', value: '1' },
 ]
 
+interface DictQuery {
+  dictName: string,
+  dictType: string,
+  status: string | null | string[],
+}
+
 const auth = useAuthStore()
 
 /* ---------- 字典类型 ---------- */
 const types = ref<SysDictTypeRow[]>([])
 const typeLoading = ref(false)
 const typeDialog = ref(false)
-const typeQuery = reactive({ dictName: '' as string | null, dictType: '' as string | null, status: '' as string | null })
+const typeQuery = reactive<DictQuery>({ dictName: '', dictType: '', status: null})
 const typeForm = reactive<Partial<SysDictTypeRow>>({})
 
 const typeHeaders = [
@@ -265,8 +274,8 @@ async function loadTypes(): Promise<void> {
 }
 
 function onReset(): void {
-  typeQuery.dictName = null
-  typeQuery.dictType = null
+  typeQuery.dictName = ''
+  typeQuery.dictType = ''
   typeQuery.status = null
   void loadTypes()
 }
