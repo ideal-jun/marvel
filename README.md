@@ -31,12 +31,12 @@ Spring Boot 4 模块化单体后台管理系统，按微服务边界拆分模块
 
 ```
 marvel-common        纯工具：统一返回体、异常、常量
-marvel-api           模块间契约：system-api / infra-api（未来变 Feign 模块）
+marvel-api           模块间契约：system-api（未来变 Feign 模块）
 marvel-framework     技术装配：Sa-Token、MyBatis-Plus、Redis、全局异常
 marvel-modules
-  module-system      用户/角色/菜单/部门（未来 system 服务）
+  module-system      用户/角色/菜单/部门/字典/参数/公告/日志/在线用户（未来 system 服务）
   module-auth        登录/验证码/动态路由（未来 auth 服务）
-  module-infra       文件存储等（未来 infra 服务）
+  module-infra       文件存储/定时任务/服务监控（未来 infra 服务）
 marvel-gateway-boot  启动器 + Flyway 迁移脚本
 marvel-ui            Vue3 前端
 ```
@@ -54,9 +54,9 @@ marvel-ui            Vue3 前端
    mvn -DskipTests install
    cd marvel-gateway-boot && mvn spring-boot:run
    ```
-3. 前端：
+3. 前端（包管理器统一为 pnpm，仓库只保留 pnpm-lock.yaml）：
    ```bash
-   cd marvel-ui && npm install && npm run dev
+   cd marvel-ui && pnpm install && pnpm run dev
    ```
 4. 访问 http://localhost:5173 ，默认账号 **admin / admin123**
 
@@ -70,8 +70,19 @@ marvel-ui            Vue3 前端
 | Sa-Token + Redis 共享会话 | 各服务共享同一 Redis 会话即可 |
 | marvel-framework 本地依赖 | 抽象为私有 starter |
 
+## 功能清单
+
+- **RBAC 权限**：用户/角色/菜单/部门管理，动态路由，数据权限（`@DataScope` 按部门过滤）
+- **认证**：登录/登出、验证码（可在参数配置中开关）、登录失败保护、在线用户列表与强制下线
+- **系统工具**：字典管理、参数配置、通知公告（含站内消息中心与已读状态）、定时任务（页面化管理 + 执行日志）
+- **审计**：操作日志（注解 `@Log` 自动记录）、登录日志，支持查询/删除/清空/导出
+- **运维**：服务监控（JVM/系统指标）、缓存监控与管理、文件管理（本地存储）、用户/日志 Excel 导入导出
+
 ## 路线图
 
-- 第一期（已完成）：多模块骨架、RBAC 全套（用户/角色/菜单/部门）、登录/验证码、动态路由、文件上传抽象
-- 第二期：字典管理、参数配置、通知公告、定时任务（表已建好，接口待实现）
-- 第三期：操作/登录日志、在线用户强踢、服务监控、数据权限（@DataScope）
+- 已完成：上述功能清单全部条目（原一/二/三期规划）
+- 规划中：
+  - 对象存储扩展：`StorageService` 目前仅本地磁盘实现，预留 OSS/COS 适配
+  - 首页看板：接入业务统计接口（当前仅展示登录会话信息）
+  - 测试补强：auth 登录链路、权限鉴定核心（`StpInterfaceImpl`）等单测覆盖持续补齐；前端组件测试
+- 安全基线：OpenAPI/Swagger 有意不启用；默认口令仅限本地演示（生产请修改并配置 `MYSQL_PASSWORD`）
