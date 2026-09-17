@@ -2,6 +2,9 @@ import '@mdi/font/css/materialdesignicons.css'
 // Vuetify 基础样式（core reset/theme 变量），经 settings.scss 编译。
 // 级联层顺序由 index.html 最先加载的 public/layers.css 声明，uno 与 vuetify 样式互不冲突。
 import 'vuetify/styles'
+// 实验室组件（VCommandPalette 顶栏命令面板）的样式不在 vuetify/styles 聚合产物内，需单独引入；
+// 该文件自带 @layer vuetify-components，与项目级联层架构一致
+import 'vuetify/lib/labs/VCommandPalette/VCommandPalette.css'
 import { createVuetify } from 'vuetify'
 import { forVuetify } from '../theme/breakpoints'
 

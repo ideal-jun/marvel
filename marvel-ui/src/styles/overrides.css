@@ -1,0 +1,11 @@
+/* 项目对组件库的自定义覆盖 —— 统一写入 vuetify-overrides 级联层
+   （层顺序见 public/layers.css，该层位于 vuetify-components 之后、vuetify-utilities 之前）。
+   覆盖规则必须放在层内：unlayered 规则会整体压过 layer 内的组件样式，破坏层叠约定。 */
+@layer vuetify-overrides {
+  /* 命令面板：内容区撑满输入框与底部图例之间的剩余高度。
+     labs 组件原始样式只给了 overflow-y: auto，自身不伸缩——面板被
+     min-height 撑高后，多余空间会落在底部键盘图例下方，导致图例不贴底。 */
+  .v-command-palette__content {
+    flex: 1 1 auto;
+  }
+}

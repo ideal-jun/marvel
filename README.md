@@ -22,10 +22,16 @@ Spring Boot 4 模块化单体后台管理系统，按微服务边界拆分模块
   Tailwind v4 标准值兜底——wind4 的 shadow token 按需输出，自定义 rule 的 var() 引用不会
   触发生成），`color` prop 动态类加入 safelist；
 - **写法约定**：布局/间距/颜色用 wind4 工具类；组件行为优先组件 props（如 `v-list` 的
-  `color`）；项目自定义样式写入 `@layer vuetify-overrides`，不覆盖组件库底层；
+  `color`）；项目自定义样式写入 `@layer vuetify-overrides`（文件 `src/styles/overrides.css`，
+  由 `main.ts` 引入），不覆盖组件库底层；
 - **必备导入**：`src/plugins/vuetify.ts` 中 `import 'vuetify/styles'`（官方脚手架必备，
   提供 reset 与组件级 CSS 变量）；不要引入第三方 reset（unlayered 规则会压过 layer 内的
   组件样式）。 + Vue Router
+- **实验室组件（labs）**：`vuetify/styles` 聚合产物**不含** labs 组件样式，用到时需要
+  在 `src/plugins/vuetify.ts` 单独引入该组件的 CSS（如
+  `import 'vuetify/lib/labs/VCommandPalette/VCommandPalette.css'`，文件自带
+  `@layer vuetify-components`，与项目级联层架构一致）；组件本身按需
+  `import { VXxx } from 'vuetify/labs/VXxx'`。当前已用：`VCommandPalette`（顶栏命令面板）。
 
 ## 前端表单约定
 
