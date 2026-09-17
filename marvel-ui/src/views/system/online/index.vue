@@ -5,7 +5,7 @@
       <template #actions>
         <v-tooltip text="刷新" location="bottom">
           <template #activator="{ props }">
-            <v-btn v-bind="props" icon="mdi-refresh" variant="text" rounded="lg" :loading="loading" @click="load" />
+            <v-btn v-bind="props" icon="mdi-refresh" variant="text" density="comfortable" rounded="lg" :loading="loading" @click="load" />
           </template>
         </v-tooltip>
       </template>
@@ -69,7 +69,7 @@ const headers = [
   { title: '浏览器 / 系统', key: 'userAgent' },
   { title: '登录时间', key: 'loginTime', width: 170 },
   { title: '会话剩余', key: 'tokenTimeout', width: 120 },
-  { title: '操作', key: 'actions', width: 70, sortable: false },
+  { title: '操作', key: 'actions', fixed: 'end' as const, width: 70, sortable: false },
 ].map((h) => ({ nowrap: true, ...h }))
 
 function notify(text: string, color: 'success' | 'error' = 'success'): void {

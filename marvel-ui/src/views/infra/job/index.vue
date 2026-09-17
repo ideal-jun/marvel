@@ -212,7 +212,7 @@ const headers = [
   { title: '调用目标', key: 'invokeTarget' },
   { title: 'cron 表达式', key: 'cronExpression' },
   { title: '状态', key: 'status', width: 90 },
-  { title: '操作', key: 'actions', width: 200, sortable: false },
+  { title: '操作', key: 'actions', fixed: 'end' as const, width: 200, sortable: false },
 ].map((h) => ({ nowrap: true, ...h }))
 
 const logHeaders = [
@@ -220,7 +220,7 @@ const logHeaders = [
   { title: '状态', key: 'status', width: 80 },
   { title: '开始时间', key: 'startTime', width: 180 },
   { title: '结束时间', key: 'endTime' },
-  { title: '操作', key: 'actions', width: 80, sortable: false },
+  { title: '操作', key: 'actions', fixed: 'end' as const, width: 80, sortable: false },
 ].map((h) => ({ nowrap: true, ...h }))
 
 function notify(text: string, color: 'success' | 'error' = 'success'): void {

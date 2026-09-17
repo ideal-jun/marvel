@@ -34,9 +34,13 @@
           :disabled="!selected.length"
           @click="onBatchDelete"
         >
-          删除{{ selected.length ? '(' + selected.length + ')' : '' }}
+          批量删除{{ selected.length ? `(${selected.length})` : '' }}
         </v-btn>
-        <v-btn icon="mdi-refresh" variant="text" rounded="lg" :loading="loading" @click="load" />
+        <v-tooltip text="刷新" location="bottom">
+          <template #activator="{ props }">
+            <v-btn v-bind="props" icon="mdi-refresh" variant="text" density="comfortable" rounded="lg" :loading="loading" @click="load" />
+          </template>
+        </v-tooltip>
       </template>
 
       <v-data-table-server
@@ -106,7 +110,7 @@ const headers = [
   { title: '类型', key: 'contentType', width: 180, nowrap: true },
   { title: '大小', key: 'fileSize', width: 120, nowrap: true },
   { title: '上传时间', key: 'createTime', width: 180, nowrap: true },
-  { title: '操作', key: 'actions', width: 110, sortable: false, nowrap: true },
+  { title: '操作', key: 'actions', fixed: 'end' as const, width: 110, sortable: false, nowrap: true },
 ]
 
 function notify(text: string, color: 'success' | 'error' = 'success'): void {

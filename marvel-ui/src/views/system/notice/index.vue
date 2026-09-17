@@ -126,7 +126,7 @@ const headers = [
   { title: '类型', key: 'type', width: 90 },
   { title: '状态', key: 'status', width: 90 },
   { title: '创建时间', key: 'createTime', width: 180 },
-  { title: '操作', key: 'actions', width: 110, sortable: false },
+  { title: '操作', key: 'actions', fixed: 'end' as const, width: 110, sortable: false },
 ].map((h) => ({ nowrap: true, ...h }))
 
 function notify(text: string, color: 'success' | 'error' = 'success'): void {

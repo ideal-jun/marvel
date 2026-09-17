@@ -40,6 +40,23 @@ Spring Boot 4 模块化单体后台管理系统，按微服务边界拆分模块
   `clearObject`（`delete` 字段）之后需对下拉字段显式赋 `null`；
 - 文本输入框（`v-text-field`）用空串 `''` 或 `null` 均可，不受此限制。
 
+## 前端列表操作区约定
+
+列表卡的操作按钮统一放在 `ListPanel` 的 `#actions` 插槽，间距由容器统一提供：
+
+- **间距**：`ListPanel` 标题行为 flex + `gap-2`（8px，与 Vuetify `v-card-actions` 的
+  `gap: 0.5rem` 一致）；页面侧不要再写 `mr-*`/`ml-*`，否则与容器 gap 叠加；
+- **图标按钮**（刷新、列设置）：`icon` + `variant="text"` + `density="comfortable"`，
+  size 保持默认。图标按钮的方形尺寸 = `--v-btn-height` + density 偏移（default +12 /
+  comfortable +0 / compact -8），默认 size 配 comfortable 才是 36×36，与默认尺寸文字
+  按钮（36px 高）对齐；用 `size="small"` 会得到 40px 反而更高；
+- **语义色**：主操作（新增/上传）`color="success"` 实心；危险操作（删除/清空）
+  `variant="tonal"` + error/warning；次要操作（导出/导入）`variant="tonal"` + primary；
+- 图标按钮一律配 `v-tooltip`，`location="bottom"`；
+- **操作列固定在右侧**：所有表格的 `操作` 列在 headers 里声明 `fixed: 'end'`
+  （Vuetify 支持 `boolean | 'start' | 'end'`，并要求该列有静态 `width`），
+  横向滚动时列始终可见；用户页的 `ColumnSettings` 对 `'end'` 列禁用图钉切换。
+
 ## 模块结构（= 未来微服务边界）
 
 ```

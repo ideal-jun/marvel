@@ -91,7 +91,7 @@
         </v-btn>
         <v-tooltip text="刷新" location="bottom">
           <template #activator="{ props }">
-            <v-btn v-bind="props" icon="mdi-refresh" variant="text" rounded="lg" :loading="loading" @click="load" />
+            <v-btn v-bind="props" icon="mdi-refresh" variant="text" density="comfortable" rounded="lg" :loading="loading" @click="load" />
           </template>
         </v-tooltip>
         <ColumnSettings v-model:columns="columns" />
@@ -321,7 +321,7 @@ const columns = ref<ColumnDef[]>([
   { key: 'phone', title: '手机号', visible: true },
   { key: 'status', title: '状态', width: 90, visible: true },
   { key: 'createTime', title: '创建时间', width: 180, visible: true },
-  { key: 'actions', title: '操作', width: 110, sortable: false, visible: true },
+  { key: 'actions', fixed: 'end' as const, title: '操作', width: 110, sortable: false, visible: true },
 ])
 
 const headers = computed(() =>
@@ -332,7 +332,7 @@ const headers = computed(() =>
       key: c.key,
       width: c.width,
       sortable: c.sortable,
-      fixed: c.fixed ? ('start' as const) : undefined,
+      fixed: c.fixed,
       // 表头单行：nowrap 为 Vuetify 官方属性，列不足时表格横向滚动而非换行
       nowrap: true,
     })),

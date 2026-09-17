@@ -5,7 +5,7 @@
     <template #activator="{ props: menuProps }">
       <v-tooltip text="列设置" location="bottom">
         <template #activator="{ props: tipProps }">
-          <v-btn v-bind="mergeProps(menuProps, tipProps)" icon="mdi-table-cog" variant="text" rounded="lg" />
+          <v-btn v-bind="mergeProps(menuProps, tipProps)" icon="mdi-table-cog" variant="text" density="comfortable" rounded="lg" />
         </template>
       </v-tooltip>
     </template>
@@ -46,13 +46,18 @@
             hide-details
           />
           <template #append>
-            <v-tooltip :text="c.fixed ? '取消固定' : '固定到左侧'" location="start">
+            <!-- 右侧固定（操作列）由页面声明，不提供取消 -->
+            <v-tooltip
+              :text="isEndFixed(c) ? '已固定到右侧' : c.fixed ? '取消固定' : '固定到左侧'"
+              location="start"
+            >
               <template #activator="{ props }">
                 <v-btn
                   v-bind="props"
                   icon
                   size="x-small"
                   variant="text"
+                  :disabled="isEndFixed(c)"
                   @click.stop="toggleFixed(c)"
                 >
                   <v-icon
@@ -78,8 +83,8 @@ export interface ColumnDef {
   width?: number | string
   sortable?: boolean
   visible: boolean
-  /** 固定列要求有静态宽度（Vuetify 约束），无 width 的列禁用图钉 */
-  fixed?: boolean
+  /** true/'start'=固定到左侧；'end'=固定到右侧（操作列，列设置不可取消） */
+  fixed?: boolean | 'start' | 'end'
 }
 </script>
 
@@ -101,7 +106,13 @@ function toggleAll(v: boolean | null): void {
   })
 }
 
+/** 右侧固定（操作列）：由页面声明，不提供取消 */
+function isEndFixed(c: ColumnDef): boolean {
+  return c.fixed === 'end'
+}
+
 function toggleFixed(c: ColumnDef): void {
+  if (isEndFixed(c)) return
   // Vuetify 固定列必须有静态 width，否则布局计算异常
   if (!c.width && !c.fixed) return
   c.fixed = !c.fixed

@@ -3,7 +3,11 @@
     <div class="flex flex-col gap-4">
       <div class="flex items-center justify-between">
         <div class="text-h6">服务监控</div>
-        <v-btn icon="mdi-refresh" variant="text" rounded="lg" :loading="loading" @click="load" />
+        <v-tooltip text="刷新" location="bottom">
+          <template #activator="{ props }">
+            <v-btn v-bind="props" icon="mdi-refresh" variant="text" density="comfortable" rounded="lg" :loading="loading" @click="load" />
+          </template>
+        </v-tooltip>
       </div>
 
       <v-row dense>

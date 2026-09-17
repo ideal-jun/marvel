@@ -93,14 +93,13 @@
       <!-- 右：选中类型的字典数据 -->
       <ListPanel title="字典数据">
         <template #actions>
-          <v-chip v-if="selectedType" size="small" label class="mr-3">{{ selectedType.dictType }}</v-chip>
+          <v-chip v-if="selectedType" size="small" label>{{ selectedType.dictType }}</v-chip>
           <v-text-field
             v-model="dataKeyword"
             label="标签/键值"
             density="compact"
             hide-details
             clearable
-            class="mr-2"
             style="max-width: 180px"
             @keyup.enter="loadData"
           />
@@ -231,7 +230,7 @@ const typeHeaders = [
   { title: '字典名称', key: 'dictName', width: 112 },
   { title: '类型键', key: 'dictType' },
   { title: '状态', key: 'status', width: 80 },
-  { title: '操作', key: 'actions', width: 92, sortable: false },
+  { title: '操作', key: 'actions', fixed: 'end' as const, width: 92, sortable: false },
 ].map((h) => ({ nowrap: true, ...h }))
 
 /* ---------- 字典数据（主从） ---------- */
@@ -247,7 +246,7 @@ const dataHeaders = [
   { title: '键值', key: 'dictValue' },
   { title: '排序', key: 'orderNum', width: 90 },
   { title: '状态', key: 'status', width: 90 },
-  { title: '操作', key: 'actions', width: 100, sortable: false },
+  { title: '操作', key: 'actions', fixed: 'end' as const, width: 100, sortable: false },
 ].map((h) => ({ nowrap: true, ...h }))
 
 const snack = reactive({ show: false, text: '', color: 'success' })
