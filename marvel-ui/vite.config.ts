@@ -9,6 +9,11 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
+  optimizeDeps: {
+    // 依赖扫描默认只从 index.html 出发，发现不了懒加载路由里的依赖；
+    // 把全部 .vue 纳入扫描入口，静态可发现的依赖在启动时一次预构建完
+    entries: ['index.html', 'src/**/*.vue'],
+  },
   plugins: [
     vue(),
     // styles.configFile 指向 Vuetify SASS 设置（关闭内置 utilities，见 settings.scss）
@@ -29,6 +34,12 @@ export default defineConfig({
   ],
   server: {
     port: 5173,
+    // vuetify autoImport 的组件依赖要等 .vue 模板转换时才被发现，扫描器看不见；
+    // 启动即预热全部 .vue（含根组件 App.vue）与入口，让依赖发现在用户访问前完成，
+    // 避免浏览中触发依赖预构建的 full-reload 打断 SPA 跳转
+    warmup: {
+      clientFiles: ['./src/**/*.vue', './src/main.ts'],
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
