@@ -237,3 +237,15 @@ export interface SysLogininforRow {
   status: string
   loginTime: string | null
 }
+
+/** 在线用户（Sa-Token 活跃会话，按用户去重） */
+export interface OnlineRow {
+  userId: number
+  username: string | null
+  loginIp: string | null
+  /** 登录时间（epoch 毫秒） */
+  loginTime: number | null
+  userAgent: string | null
+  /** 令牌剩余有效期（秒） */
+  tokenTimeout: number
+}
