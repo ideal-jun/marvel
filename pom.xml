@@ -79,11 +79,6 @@
             </dependency>
             <dependency>
                 <groupId>com.marvel</groupId>
-                <artifactId>infra-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.marvel</groupId>
                 <artifactId>marvel-framework</artifactId>
                 <version>${project.version}</version>
             </dependency>

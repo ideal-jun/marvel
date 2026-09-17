@@ -16,6 +16,5 @@
 
     <modules>
         <module>system-api</module>
-        <module>infra-api</module>
     </modules>
 </project>
