@@ -186,6 +186,18 @@ export interface SysNoticeRow {
   createTime: string
 }
 
+/** 我的消息：已发布公告 + 当前用户的已读标记（站内消息面板与「我的消息」页共用） */
+export interface MyNoticeRow {
+  noticeId: number
+  title: string
+  content: string | null
+  /** 1=通知 2=公告 */
+  type: string
+  createTime: string
+  /** 当前用户是否已读 */
+  read: boolean
+}
+
 /** 定时任务 */
 export interface SysJobRow {
   jobId: number
