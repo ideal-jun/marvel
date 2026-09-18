@@ -3,14 +3,19 @@
        直接提供 v-navigation-drawer / v-app-bar / v-main，
        再嵌套 v-app 会形成双重布局坐标系，导致整页随内容滚动。
        内容全屏（TagsBar 右侧按钮）时隐藏侧栏与顶栏，仅保留内容区 -->
+  <!-- 主题配置抽屉（右侧临时抽屉，不参与布局偏移） -->
+  <ThemeDrawer />
   <v-navigation-drawer v-if="!app.contentFullscreen">
-      <template #prepend>
-      <div class="flex items-center gap-2 p-4">
-        <v-avatar color="primary" size="34" rounded="lg">
-          <v-icon icon="mdi-hexagon-multiple" size="20" />
-        </v-avatar>
-        <span class="text-h6 font-bold">Marvel Admin</span>
-      </div>
+    <template #prepend>
+      <v-list density="compact">
+        <v-list-item title="Marvel Admin" >
+          <template #prepend>
+            <v-avatar color="primary" size="30" rounded="lg">
+              <v-icon icon="mdi-hexagon-multiple" size="20" />
+            </v-avatar>
+          </template>
+        </v-list-item>
+      </v-list>
       <v-divider />
     </template>
 
@@ -50,60 +55,75 @@
       <template #append>
         <div class="text-caption text-center p-4 opacity-60">v1.0.0 · Modular Monolith</div>
       </template>
-    </v-navigation-drawer>
-
-    <!-- 边框色用 on-surface 主题变量的低透明度，明暗主题自适应 -->
-    <v-app-bar v-if="!app.contentFullscreen" flat class="border-b border-[rgba(var(--v-theme-on-surface),0.12)]">
+    </v-navigation-drawer >
+    <!-- 边框色用 on-surface 主题变量的低透明度，明暗主题自适应；
+         extension 高 44 为页签条留出 tab 高 33 + 上边距 11 的比例 -->
+    <!-- extension-height 需按 density 补偿：Vuetify 对 comfortable 会在此值上减 4px
+         （源码 extensionHeight - (density==='comfortable' ? 4 : 0)），传 48 得到 44 的页签条高度 -->
+    <v-app-bar
+      v-if="!app.contentFullscreen"
+      density="comfortable"
+      extension-height="48"
+    >
       <v-spacer />
-      <!-- 功能按钮组：站内消息 / 菜单搜索 / 浏览器全屏 / 主题切换 -->
-      <NoticeCenter />
-      <AppSearch />
-      <v-tooltip text="全屏" location="bottom">
-        <template #activator="{ props }">
-          <v-btn
-            v-bind="props"
-            :icon="fullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen'"
-            variant="text"
-            rounded="lg"
-            @click="toggleFullscreen"
-          />
-        </template>
-      </v-tooltip>
-      <v-tooltip :text="app.dark ? '切换亮色模式' : '切换暗色模式'" location="bottom">
-        <template #activator="{ props }">
-          <v-btn
-            v-bind="props"
-            :icon="app.dark ? 'mdi-weather-night' : 'mdi-weather-sunny'"
-            variant="text"
-            rounded="lg"
-            @click="app.toggleTheme()"
-          />
-        </template>
-      </v-tooltip>
-      <v-tooltip text="主题配置" location="bottom">
-        <template #activator="{ props }">
-          <v-btn v-bind="props" icon="mdi-palette" variant="text" rounded="lg" @click="app.themeDrawer = true" />
-        </template>
-      </v-tooltip>
-      <v-divider vertical inset class="mx-2" />
-      <v-menu>
-        <template #activator="{ props: menuProps }">
-          <v-btn v-bind="menuProps" variant="text" rounded="lg" class="text-none mr-2">
-            <v-avatar color="primary" size="28" class="mr-2">
-              <span class="text-caption font-weight-bold">{{ avatarText }}</span>
-            </v-avatar>
-            <span class="text-body-2">{{ auth.nickname }}</span>
-            <v-icon icon="mdi-chevron-down" size="18" class="ml-1" />
-          </v-btn>
-        </template>
-        <v-list nav density="compact" elevation="4">
-          <v-list-item title="退出登录" prepend-icon="mdi-logout" @click="onLogout" />
-        </v-list>
-      </v-menu>
-
-      <!-- 页签栏挂在 app-bar 的 extension 区，v-main 会自动为其留出偏移 -->
+      <div class="flex gap-1">
+        <!-- 功能按钮组：站内消息 / 菜单搜索 / 浏览器全屏 / 主题切换 -->
+        <NoticeCenter />
+        <AppSearch />
+        <v-tooltip text="全屏" location="bottom">
+          <template #activator="{ props }">
+            <v-btn
+                v-bind="props"
+                :icon="fullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen'"
+                variant="text"
+                rounded="lg"
+                density="comfortable"
+                @click="toggleFullscreen"
+            />
+          </template>
+        </v-tooltip>
+        <v-tooltip :text="app.dark ? '切换亮色模式' : '切换暗色模式'" location="bottom">
+          <template #activator="{ props }">
+            <v-btn
+                v-bind="props"
+                :icon="app.dark ? 'mdi-weather-night' : 'mdi-weather-sunny'"
+                density="comfortable"
+                variant="text"
+                rounded="lg"
+                @click="app.toggleTheme()"
+            />
+          </template>
+        </v-tooltip>
+        <v-tooltip text="主题配置" location="bottom">
+          <template #activator="{ props }">
+            <v-btn v-bind="props" icon="mdi-palette" variant="text" density="comfortable" rounded="lg" @click="app.themeDrawer = true" />
+          </template>
+        </v-tooltip>
+        <v-menu>
+          <template #activator="{ props: menuProps }">
+            <v-btn v-bind="menuProps" variant="text" rounded="lg" class="text-none mr-2">
+              <v-avatar color="primary" size="28" class="mr-2">
+                <span class="text-caption font-weight-bold">{{ avatarText }}</span>
+              </v-avatar>
+              <span class="text-body-2">{{ auth.nickname }}</span>
+              <v-icon icon="mdi-chevron-down" size="18" class="ml-1" />
+            </v-btn>
+          </template>
+          <v-list nav density="compact" elevation="4">
+            <v-list-item title="退出登录" prepend-icon="mdi-logout" @click="onLogout" />
+          </v-list>
+        </v-menu>
+      </div>
+      <!-- 页签栏挂在 app-bar 的 extension 区，v-main 会自动为其留出偏移。
+           分隔线用容器上边框而非 v-divider 元素：元素占 1px 布局高度会把页签条挤出
+           extension 高度导致页签底边被裁；边框不占内容高度，视觉一致。
+           extension-height 传 48（Vuetify 对 comfortable 密度减 4 → 实际 44 = 页签条高度） -->
       <template #extension>
-        <TagsBar />
+        <div
+          class="flex-1 min-h-0 self-stretch d-flex flex-column border-t border-[rgba(var(--v-theme-on-surface),0.12)]"
+        >
+          <TagsBar class="flex-1 min-h-0" />
+        </div>
       </template>
     </v-app-bar>
 
@@ -133,8 +153,6 @@
         </router-view>
       </v-container>
     </v-main>
-    <!-- 主题配置抽屉（右侧临时抽屉，不参与布局偏移） -->
-    <ThemeDrawer />
 </template>
 
 <script setup lang="ts">
@@ -143,6 +161,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { useTabsStore } from '@/stores/tabs'
+import { stopSse } from '@/utils/sse'
 import AppSearch from '@/layout/AppSearch.vue'
 import TagsBar from '@/layout/TagsBar.vue'
 import ThemeDrawer from '@/layout/ThemeDrawer.vue'
@@ -184,6 +203,8 @@ watch(
 
 async function onLogout(): Promise<void> {
   await auth.logout()
+  // 先断开 SSE 长连接再清页签，避免登出后仍挂着推送通道
+  stopSse()
   tabs.reset()
   router.push('/login')
 }
