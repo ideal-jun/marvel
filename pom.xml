@@ -39,6 +39,15 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- 版本对齐：Sa-Token BOM 把 spring-web 钉在 7.0.3，与 Boot 4.1.1 管理的其余
+                 Spring Framework（${spring-framework.version}）错配——spring-webmvc 的
+                 SseEmitter 依赖 spring-web 的 SseUtils，版本落后会让 SSE 端点抛
+                 NoClassDefFoundError。显式对齐到 Boot 管理版本（管理项置于 import 之前才能覆盖 BOM） -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-web</artifactId>
+                <version>${spring-framework.version}</version>
+            </dependency>
             <!-- 安全修复：Sa-Token 1.46.0 BOM 把 Jackson2 降到 jackson-databind 2.13.4.1
                  （CVE-2022-42003 / CVE-2022-42004）与 jackson-datatype-jsr310 2.11.2。
                  显式管理项放在 import 之前，以覆盖导入 BOM 的同名管理项。 -->

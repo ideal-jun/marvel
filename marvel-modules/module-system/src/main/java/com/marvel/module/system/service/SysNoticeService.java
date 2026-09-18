@@ -20,8 +20,15 @@ public interface SysNoticeService extends IService<SysNotice> {
 
     void deleteNotices(List<Long> noticeIds);
 
-    /** 我的消息：已发布公告 + 指定用户的已读状态（可按未读过滤） */
-    IPage<Map<String, Object>> myNotices(Long userId, long pageNum, long pageSize, boolean onlyUnread);
+    /**
+     * 我的消息：已发布公告 + 指定用户的已读状态。
+     *
+     * @param onlyUnread 只看未读
+     * @param title      标题模糊匹配（可空）
+     * @param type       类型精确匹配（可空，1=通知 2=公告）
+     */
+    IPage<Map<String, Object>> myNotices(Long userId, long pageNum, long pageSize,
+                                         boolean onlyUnread, String title, String type);
 
     /** 未读消息数 */
     long unreadCount(Long userId);

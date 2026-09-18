@@ -10,6 +10,7 @@ import com.marvel.module.system.entity.SysNotice;
 import com.marvel.module.system.entity.SysNoticeRead;
 import com.marvel.module.system.mapper.SysNoticeMapper;
 import com.marvel.module.system.mapper.SysNoticeReadMapper;
+import com.marvel.module.system.service.SsePushService;
 import com.marvel.module.system.service.SysNoticeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import java.util.Set;
 public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice> implements SysNoticeService {
 
     private final SysNoticeReadMapper readMapper;
+    private final SsePushService ssePushService;
 
     @Override
     public List<SysNotice> listNotices(String title, String type) {
@@ -44,6 +46,16 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
     public void createNotice(SysNotice notice) {
         notice.setNoticeId(null);
         this.save(notice);
+        // 正常状态的新公告对所有用户可见：经 Redis 扇出到各节点，在线端即时点亮未读角标
+        if (Constants.STATUS_NORMAL.equals(notice.getStatus())) {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("noticeId", notice.getNoticeId());
+            payload.put("title", notice.getTitle());
+            payload.put("content", notice.getContent());
+            payload.put("type", notice.getType());
+            payload.put("createTime", notice.getCreateTime());
+            ssePushService.broadcast("notice", payload);
+        }
     }
 
     @Override
@@ -59,9 +71,12 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
     }
 
     @Override
-    public IPage<Map<String, Object>> myNotices(Long userId, long pageNum, long pageSize, boolean onlyUnread) {
+    public IPage<Map<String, Object>> myNotices(Long userId, long pageNum, long pageSize,
+                                                boolean onlyUnread, String title, String type) {
         LambdaQueryWrapper<SysNotice> wrapper = new LambdaQueryWrapper<SysNotice>()
                 .eq(SysNotice::getStatus, Constants.STATUS_NORMAL)
+                .like(StringUtils.hasText(title), SysNotice::getTitle, title)
+                .eq(StringUtils.hasText(type), SysNotice::getType, type)
                 .orderByDesc(SysNotice::getNoticeId);
         if (onlyUnread) {
             List<Long> readIds = readMapper.selectReadNoticeIds(userId);

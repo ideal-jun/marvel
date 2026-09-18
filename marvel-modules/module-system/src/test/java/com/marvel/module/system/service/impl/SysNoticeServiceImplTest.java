@@ -4,6 +4,7 @@ import com.marvel.module.system.entity.SysNotice;
 import com.marvel.module.system.entity.SysNoticeRead;
 import com.marvel.module.system.mapper.SysNoticeMapper;
 import com.marvel.module.system.mapper.SysNoticeReadMapper;
+import com.marvel.module.system.service.SsePushService;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -17,7 +18,7 @@ import static org.mockito.Mockito.when;
 class SysNoticeServiceImplTest {
 
     private SysNoticeServiceImpl service(SysNoticeReadMapper readMapper, SysNoticeMapper noticeMapper) {
-        SysNoticeServiceImpl service = new SysNoticeServiceImpl(readMapper);
+        SysNoticeServiceImpl service = new SysNoticeServiceImpl(readMapper, mock(SsePushService.class));
         ReflectionTestUtils.setField(service, "baseMapper", noticeMapper);
         return service;
     }

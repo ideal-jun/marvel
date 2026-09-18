@@ -62,12 +62,14 @@ public class SysNoticeController {
 
     /* ---------------- 站内消息（登录即可，个人维度） ---------------- */
 
-    /** 我的消息：已发布公告 + 当前用户已读状态 */
+    /** 我的消息：已发布公告 + 当前用户已读状态（支持标题/类型筛选） */
     @GetMapping("/my")
     public R<IPage<Map<String, Object>>> my(@RequestParam(defaultValue = "1") long pageNum,
                                             @RequestParam(defaultValue = "10") long pageSize,
-                                            @RequestParam(defaultValue = "false") boolean onlyUnread) {
-        return R.ok(noticeService.myNotices(StpUtil.getLoginIdAsLong(), pageNum, pageSize, onlyUnread));
+                                            @RequestParam(defaultValue = "false") boolean onlyUnread,
+                                            @RequestParam(required = false) String title,
+                                            @RequestParam(required = false) String type) {
+        return R.ok(noticeService.myNotices(StpUtil.getLoginIdAsLong(), pageNum, pageSize, onlyUnread, title, type));
     }
 
     /** 未读消息数（用于顶栏红点） */
