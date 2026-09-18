@@ -5,24 +5,31 @@
     v-model="open"
     v-model:search="search"
     :items="items"
-    :no-data-text="noDataText"
+    :list-props="{
+      nav: true,
+      color: 'primary',
+    }"
     hotkey="ctrl+k"
     max-width="500"
     density="comfortable"
-    placeholder="搜索菜单..."
+    placeholder="搜索..."
     class="rounded-lg min-h-[300px] max-h-[60vh]"
   >
+    <template #default>
+      <v-divider></v-divider>
+    </template>
     <template #activator="{ props: activatorProps }">
-      <v-tooltip text="搜索（Ctrl+K）" location="bottom">
-        <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="mergeProps(activatorProps, tipProps)"
-            icon="mdi-magnify"
-            variant="text"
-            rounded="lg"
-          />
+      <v-btn
+        v-bind="activatorProps"
+        prepend-icon="mdi-magnify"
+        variant="text"
+        rounded="lg"
+        text="搜索"
+      >
+        <template #append>
+          <v-kbd class="opacity-60 self-center py-1 shadow-none">Ctrl+K</v-kbd>
         </template>
-      </v-tooltip>
+      </v-btn>
     </template>
 
     <!-- 输入框尾部：Esc 关闭提示 -->
@@ -32,9 +39,8 @@
 
     <!-- 条目尾部：菜单路径提示 -->
     <template #item.append="{ item }">
-      <span class="text-caption opacity-70">{{ itemHint(item) }}</span>
+      <v-icon-btn variant="text" icon="$enter"></v-icon-btn>
     </template>
-
     <!-- 底部：键盘操作图例 -->
     <template #append>
       <div
@@ -49,6 +55,12 @@
         <div class="mr-3">打开</div>
         <v-kbd>Esc</v-kbd>
         <div class="mr-3">关闭</div>
+      </div>
+    </template>
+    <template #no-data>
+      <div class="h-170px flex flex-col justify-center items-center">
+        <v-icon  icon="mdi-text-box-search-outline" size="120"></v-icon>
+        <span>您的搜索结果将显示在这里</span>
       </div>
     </template>
   </v-command-palette>
@@ -98,7 +110,7 @@ const allItems = computed<PaletteItem[]>(() => {
         out.push({
           title: node.menuName,
           prependIcon: node.icon || 'mdi-circle-small',
-          hint: path,
+          subtitle: path,
           onClick: () => void router.push(`/${path}`),
         })
       }
