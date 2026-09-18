@@ -32,21 +32,49 @@ export default createVuetify({
           error: '#DC2626',
           info: '#0284C7',
         },
+        variables: {
+          'border-opacity': 0.12,
+          'high-emphasis-opacity': 0.82,
+          'medium-emphasis-opacity': 0.60,
+          'disabled-opacity': 0.38,
+          'idle-opacity': 0.04,
+          'hover-opacity': 0.04,
+          'focus-opacity': 0.12,
+          'selected-opacity': 0.08,
+          'activated-opacity': 0.12,
+          'pressed-opacity': 0.12,
+          'dragged-opacity': 0.08,
+        }
       },
       dark: {
         dark: true,
         colors: {
-          // 暗色下主色提亮一档保证对比度，底色用低饱和深蓝灰；主题色与 light 共用恢复值
+          // 暗色下主色提亮一档保证对比度；主题色与 light 共用恢复值。
+          // 底色/表面用纯中性灰阶（Material 暗色标高）：不带色相偏移，
+          // 配任意预设主色都不冲突，也不会出现偏蓝紫、发闷的观感
           primary: localStorage.getItem('marvel-primary') ?? '#818CF8',
           secondary: '#94A3B8',
           accent: '#A78BFA',
-          background: '#0F1117',
-          surface: '#1A1D27',
+          background: '#121212',
+          surface: '#1C1C1C',
           success: '#22C55E',
           warning: '#F59E0B',
           error: '#EF4444',
           info: '#38BDF8',
         },
+        variables: {
+          'border-opacity': 0.12,
+          'high-emphasis-opacity': 0.82,
+          'medium-emphasis-opacity': 0.60,
+          'disabled-opacity': 0.38,
+          'idle-opacity': 0.04,
+          'hover-opacity': 0.04,
+          'focus-opacity': 0.12,
+          'selected-opacity': 0.08,
+          'activated-opacity': 0.12,
+          'pressed-opacity': 0.12,
+          'dragged-opacity': 0.08
+        }
       },
     },
   },
@@ -68,13 +96,14 @@ export default createVuetify({
     // VExpansionPanel: {
       
     // }, 
-    VTextField: { variant: 'outlined', density: 'comfortable' },
-    VSelect: { variant: 'outlined', density: 'comfortable' },
+    VTextField: { variant: 'outlined', density: 'comfortable', color: 'primary' },
+    VSelect: { variant: 'outlined', density: 'comfortable', color: 'primary'  },
     // v-date-input 不继承 VTextField 默认值，需单独声明保持筛选控件风格统一。
     // 显示格式统一 yyyy-MM-dd：内置 date adapter 只认命名格式不认 token 字符串，
     // 故用函数格式化（displayFormat 官方支持函数形式）
     VDateInput: {
       variant: 'outlined',
+      color: 'primary',
       placeholder: 'yyyy-MM-dd',
       displayFormat: (d: Date) =>
         `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
