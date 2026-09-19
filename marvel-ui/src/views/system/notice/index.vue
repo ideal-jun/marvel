@@ -59,12 +59,24 @@
         <template #item.actions="{ item }">
           <v-tooltip v-if="auth.hasPerm('system:notice:edit')" text="编辑">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-pencil" size="18" class="mr-3 text-secondary" @click="openEdit(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-pencil"
+                size="18"
+                class="mr-3 text-secondary"
+                @click="openEdit(item)"
+              />
             </template>
           </v-tooltip>
           <v-tooltip v-if="auth.hasPerm('system:notice:remove')" text="删除">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-delete" size="18" class="text-error" @click="onDelete(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-delete"
+                size="18"
+                class="text-error"
+                @click="onDelete(item)"
+              />
             </template>
           </v-tooltip>
         </template>
@@ -74,16 +86,18 @@
     <v-dialog v-model="dialog" width="640">
       <v-card :title="form.noticeId ? '修改公告' : '新增公告'" rounded="xl">
         <v-card-text>
-          <v-text-field v-model="form.title" label="公告标题" />
-          <v-radio-group v-model="form.type" inline label="类型">
-            <v-radio label="通知" value="1" />
-            <v-radio label="公告" value="2" />
-          </v-radio-group>
-          <v-textarea v-model="form.content" label="公告内容" rows="6" />
-          <v-radio-group v-model="form.status" inline label="状态">
-            <v-radio label="正常" value="0" />
-            <v-radio label="关闭" value="1" />
-          </v-radio-group>
+          <v-form ref="formRef" @submit.prevent="onSave">
+            <v-text-field v-model="form.title" label="公告标题" :rules="['$required']" />
+            <v-radio-group v-model="form.type" inline label="类型">
+              <v-radio label="通知" value="1" />
+              <v-radio label="公告" value="2" />
+            </v-radio-group>
+            <v-textarea v-model="form.content" label="公告内容" rows="6" :rules="['$required']" />
+            <v-radio-group v-model="form.status" inline label="状态">
+              <v-radio label="正常" value="0" />
+              <v-radio label="关闭" value="1" />
+            </v-radio-group>
+          </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -93,7 +107,9 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{ snack.text }}</v-snackbar>
+    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{
+      snack.text
+    }}</v-snackbar>
   </div>
 </template>
 
@@ -112,6 +128,7 @@ const auth = useAuthStore()
 const rows = ref<SysNoticeRow[]>([])
 const loading = ref(false)
 const dialog = ref(false)
+const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 const typeOptions = [
   { title: '通知', value: '1' },
   { title: '公告', value: '2' },
@@ -163,6 +180,8 @@ function openEdit(item: SysNoticeRow): void {
 }
 
 async function onSave(): Promise<void> {
+  const valid = await formRef.value?.validate()
+  if (valid && !valid.valid) return
   try {
     if (form.noticeId) {
       await http.put<null>('/system/notice', form)

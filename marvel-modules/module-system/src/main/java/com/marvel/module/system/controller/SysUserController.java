@@ -106,6 +106,20 @@ public class SysUserController {
         return R.ok();
     }
 
+    /** 当前登录用户资料（密码密文已抹除） */
+    @GetMapping("/profile")
+    public R<SysUser> profile() {
+        return R.ok(userService.getProfile(StpUtil.getLoginIdAsLong()));
+    }
+
+    /** 修改当前登录用户资料（昵称/邮箱/手机号/性别/头像） */
+    @Log(title = "个人中心", businessType = Log.BusinessType.UPDATE)
+    @PutMapping("/profile")
+    public R<Void> updateProfile(@RequestBody SysUser profile) {
+        userService.updateProfile(StpUtil.getLoginIdAsLong(), profile);
+        return R.ok();
+    }
+
     /** 当前登录用户修改自己的密码（需验证原密码） */
     @Log(title = "用户管理", businessType = Log.BusinessType.UPDATE)
     @PutMapping("/profile/password")

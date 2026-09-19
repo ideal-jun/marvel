@@ -1,7 +1,14 @@
 <template>
   <!-- 站内消息：铃铛下拉面板（v-menu），打开即加载最近消息；
        点击外部自动关闭，点击条目标记已读但不收起面板 -->
-  <v-menu v-model="menuOpen" location="bottom" offset="6" width="380" :close-on-content-click="false" @update:model-value="onMenuToggle">
+  <v-menu
+    v-model="menuOpen"
+    location="bottom"
+    offset="6"
+    width="380"
+    :close-on-content-click="false"
+    @update:model-value="onMenuToggle"
+  >
     <template #activator="{ props: menuProps }">
       <v-tooltip text="站内消息" location="bottom">
         <template #activator="{ props: tipProps }">
@@ -12,9 +19,15 @@
             :model-value="notice.unread > 0"
             color="error"
             location="top right"
-            offset-y="6" 
+            offset-y="6"
           >
-            <v-btn v-bind="{ ...menuProps, ...tipProps }" variant="text" icon density="comfortable" rounded="lg">
+            <v-btn
+              v-bind="{ ...menuProps, ...tipProps }"
+              variant="text"
+              icon
+              density="comfortable"
+              rounded="lg"
+            >
               <v-icon icon="mdi-bell-outline" />
             </v-btn>
           </v-badge>
@@ -25,7 +38,9 @@
     <v-sheet rounded="lg">
       <div class="flex items-center px-4 py-3">
         <span class="text-body-2 font-weight-bold">站内消息</span>
-        <v-chip v-if="notice.unread > 0" size="x-small" color="error" class="ml-2">{{ notice.unread }}</v-chip>
+        <v-chip v-if="notice.unread > 0" size="x-small" color="error" class="ml-2">{{
+          notice.unread
+        }}</v-chip>
         <v-spacer />
         <v-btn
           variant="text"
@@ -42,7 +57,12 @@
 
       <div class="notice-list">
         <v-list v-if="items.length" lines="two" class="py-0">
-          <v-list-item v-for="item in items" :key="item.noticeId" class="px-4" @click="onRead(item)">
+          <v-list-item
+            v-for="item in items"
+            :key="item.noticeId"
+            class="px-4"
+            @click="onRead(item)"
+          >
             <template #prepend>
               <v-icon
                 :color="item.read ? 'grey' : 'primary'"
@@ -67,7 +87,14 @@
       <div class="flex items-center px-4 py-1">
         <span class="text-caption text-medium-emphasis">仅展示最近 20 条</span>
         <v-spacer />
-        <v-btn variant="text" size="small" rounded="lg" append-icon="mdi-chevron-right" @click="goAll">查看全部</v-btn>
+        <v-btn
+          variant="text"
+          size="small"
+          rounded="lg"
+          append-icon="mdi-chevron-right"
+          @click="goAll"
+          >查看全部</v-btn
+        >
       </div>
     </v-sheet>
   </v-menu>

@@ -91,4 +91,11 @@ public class SysNoticeController {
         noticeService.markAllRead(StpUtil.getLoginIdAsLong());
         return R.ok();
     }
+
+    /** 删除我的消息（仅影响当前用户可见性，不删除公告本身） */
+    @DeleteMapping("/my/{noticeIds}")
+    public R<Void> deleteMy(@PathVariable List<Long> noticeIds) {
+        noticeService.deleteMyNotices(StpUtil.getLoginIdAsLong(), noticeIds);
+        return R.ok();
+    }
 }

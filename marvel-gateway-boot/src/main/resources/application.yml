@@ -48,8 +48,20 @@ sa-token:
 
 marvel:
   storage:
+    # 存储实现：local（本地磁盘，默认）| minio（对象存储）
+    type: ${STORAGE_TYPE:local}
     local:
       path: ${UPLOAD_PATH:./uploads}
+    minio:
+      endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+      access-key: ${MINIO_ACCESS_KEY:minioadmin}
+      secret-key: ${MINIO_SECRET_KEY:minioadmin}
+      bucket: ${MINIO_BUCKET:marvel}
+      # 对外访问基址（走 CDN/反向代理时填写）；留空则生成预签名 URL
+      public-url: ${MINIO_PUBLIC_URL:}
+      # 桶匿名只读：true 时 toUrl 返回稳定直链，便于 <img> 直接展示
+      public-read: ${MINIO_PUBLIC_READ:true}
+      presign-expiry-seconds: ${MINIO_PRESIGN_EXPIRY:604800}
   job:
     pool-size: ${JOB_POOL_SIZE:4}
     # 单次触发失败后的自动重试次数（不含首次执行）

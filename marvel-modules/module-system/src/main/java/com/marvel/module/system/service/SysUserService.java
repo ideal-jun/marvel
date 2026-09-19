@@ -28,4 +28,10 @@ public interface SysUserService extends IService<SysUser> {
     void updatePassword(Long userId, String oldPassword, String newPassword);
 
     List<Long> getRoleIdsByUserId(Long userId);
+
+    /** 当前用户资料（密码密文已抹除） */
+    SysUser getProfile(Long userId);
+
+    /** 更新当前用户资料：仅允许昵称/邮箱/手机号/性别/头像，不触碰账号、状态与角色 */
+    void updateProfile(Long userId, SysUser profile);
 }

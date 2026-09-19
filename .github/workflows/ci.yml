@@ -49,6 +49,10 @@ jobs:
           cache-dependency-path: marvel-ui/pnpm-lock.yaml
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Lint & format check (oxc)
+        run: |
+          pnpm run lint
+          pnpm run format:check
       - name: Type-check & build
         run: pnpm run build
       - name: Unit tests

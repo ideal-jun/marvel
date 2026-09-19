@@ -38,7 +38,15 @@
         </v-btn>
         <v-tooltip text="刷新" location="bottom">
           <template #activator="{ props }">
-            <v-btn v-bind="props" icon="mdi-refresh" variant="text" density="comfortable" rounded="lg" :loading="loading" @click="load" />
+            <v-btn
+              v-bind="props"
+              icon="mdi-refresh"
+              variant="text"
+              density="comfortable"
+              rounded="lg"
+              :loading="loading"
+              @click="load"
+            />
           </template>
         </v-tooltip>
       </template>
@@ -62,19 +70,33 @@
         <template #item.actions="{ item }">
           <v-tooltip v-if="auth.hasPerm('infra:file:download')" text="下载">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-download" size="18" class="mr-3 text-primary" @click="onDownload(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-download"
+                size="18"
+                class="mr-3 text-primary"
+                @click="onDownload(item)"
+              />
             </template>
           </v-tooltip>
           <v-tooltip v-if="auth.hasPerm('infra:file:remove')" text="删除">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-delete" size="18" class="text-error" @click="onDelete(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-delete"
+                size="18"
+                class="text-error"
+                @click="onDelete(item)"
+              />
             </template>
           </v-tooltip>
         </template>
       </v-data-table-server>
     </ListPanel>
 
-    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{ snack.text }}</v-snackbar>
+    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{
+      snack.text
+    }}</v-snackbar>
   </div>
 </template>
 
@@ -110,7 +132,14 @@ const headers = [
   { title: '类型', key: 'contentType', width: 180, nowrap: true },
   { title: '大小', key: 'fileSize', width: 120, nowrap: true },
   { title: '上传时间', key: 'createTime', width: 180, nowrap: true },
-  { title: '操作', key: 'actions', fixed: 'end' as const, width: 110, sortable: false, nowrap: true },
+  {
+    title: '操作',
+    key: 'actions',
+    fixed: 'end' as const,
+    width: 110,
+    sortable: false,
+    nowrap: true,
+  },
 ]
 
 function notify(text: string, color: 'success' | 'error' = 'success'): void {
@@ -133,7 +162,9 @@ function human(bytes: number): string {
 async function load(): Promise<void> {
   loading.value = true
   try {
-    const page = await http.get<PageResult<SysFileRow>>('/infra/file/page', { params: { ...query } })
+    const page = await http.get<PageResult<SysFileRow>>('/infra/file/page', {
+      params: { ...query },
+    })
     rows.value = page.records
     total.value = page.total
   } catch (e) {

@@ -8,8 +8,11 @@ import com.marvel.module.system.service.SsePushService;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -60,5 +63,24 @@ class SysNoticeServiceImplTest {
         when(readMapper.countUnread(7L)).thenReturn(3L);
 
         assertThat(service(readMapper, mock(SysNoticeMapper.class)).unreadCount(7L)).isEqualTo(3L);
+    }
+
+    @Test
+    void deleteMyNoticesMarksDeletedPerUser() {
+        SysNoticeReadMapper readMapper = mock(SysNoticeReadMapper.class);
+
+        service(readMapper, mock(SysNoticeMapper.class)).deleteMyNotices(7L, List.of(1L, 2L));
+
+        verify(readMapper).markDeleted(7L, List.of(1L, 2L));
+    }
+
+    @Test
+    void deleteMyNoticesIgnoresEmptyInput() {
+        SysNoticeReadMapper readMapper = mock(SysNoticeReadMapper.class);
+
+        service(readMapper, mock(SysNoticeMapper.class)).deleteMyNotices(7L, List.of());
+        service(readMapper, mock(SysNoticeMapper.class)).deleteMyNotices(7L, null);
+
+        verify(readMapper, never()).markDeleted(any(), anyList());
     }
 }

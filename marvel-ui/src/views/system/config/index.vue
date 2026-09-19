@@ -49,12 +49,24 @@
         <template #item.actions="{ item }">
           <v-tooltip v-if="auth.hasPerm('system:config:edit')" text="编辑">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-pencil" size="18" class="mr-3 text-secondary" @click="openEdit(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-pencil"
+                size="18"
+                class="mr-3 text-secondary"
+                @click="openEdit(item)"
+              />
             </template>
           </v-tooltip>
           <v-tooltip v-if="auth.hasPerm('system:config:remove')" text="删除">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-delete" size="18" class="text-error" @click="onDelete(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-delete"
+                size="18"
+                class="text-error"
+                @click="onDelete(item)"
+              />
             </template>
           </v-tooltip>
         </template>
@@ -64,10 +76,17 @@
     <v-dialog v-model="dialog" width="520">
       <v-card :title="form.configId ? '修改参数' : '新增参数'" rounded="xl">
         <v-card-text>
-          <v-text-field v-model="form.configName" label="参数名称" />
-          <v-text-field v-model="form.configKey" label="参数键名" :disabled="!!form.configId" />
-          <v-text-field v-model="form.configValue" label="参数键值" />
-          <v-text-field v-model="form.remark" label="备注" />
+          <v-form ref="formRef" @submit.prevent="onSave">
+            <v-text-field v-model="form.configName" label="参数名称" :rules="['$required']" />
+            <v-text-field
+              v-model="form.configKey"
+              label="参数键名"
+              :disabled="!!form.configId"
+              :rules="['$required']"
+            />
+            <v-text-field v-model="form.configValue" label="参数键值" />
+            <v-text-field v-model="form.remark" label="备注" />
+          </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -77,7 +96,9 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{ snack.text }}</v-snackbar>
+    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{
+      snack.text
+    }}</v-snackbar>
   </div>
 </template>
 
@@ -94,6 +115,7 @@ const auth = useAuthStore()
 const rows = ref<SysConfigRow[]>([])
 const loading = ref(false)
 const dialog = ref(false)
+const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 const query = reactive({ configName: '' as string | null, configKey: '' as string | null })
 const form = reactive<Partial<SysConfigRow>>({})
 const snack = reactive({ show: false, text: '', color: 'success' })
@@ -141,6 +163,8 @@ function openEdit(item: SysConfigRow): void {
 }
 
 async function onSave(): Promise<void> {
+  const valid = await formRef.value?.validate()
+  if (valid && !valid.valid) return
   try {
     if (form.configId) {
       await http.put<null>('/system/config', form)

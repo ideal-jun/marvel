@@ -27,7 +27,7 @@
           label="用户名"
           prepend-inner-icon="mdi-account-outline"
           autocomplete="username"
-          :rules="[rules.required]"
+          :rules="['$required']"
           class="mb-1"
         />
         <v-text-field
@@ -36,7 +36,7 @@
           type="password"
           prepend-inner-icon="mdi-lock-outline"
           autocomplete="new-password"
-          :rules="[rules.required]"
+          :rules="['$required']"
           class="mb-1"
         />
         <div v-if="captchaEnabled" class="flex items-start gap-3">
@@ -44,7 +44,7 @@
             v-model="form.code"
             label="验证码"
             prepend-inner-icon="mdi-shield-key-outline"
-            :rules="[rules.required]"
+            :rules="['$required']"
             class="grow"
           />
           <!-- 验证码 SVG 转 data-url 展示，避免 v-html 注入风险 -->
@@ -62,14 +62,7 @@
             </template>
           </v-tooltip>
         </div>
-        <v-btn
-          type="submit"
-          color="primary"
-          block
-          size="large"
-          class="mt-4"
-          :loading="loading"
-        >
+        <v-btn type="submit" color="primary" block size="large" class="mt-4" :loading="loading">
           登 录
         </v-btn>
       </v-form>
@@ -95,12 +88,8 @@ const showError = ref(false)
 const errorMessage = ref('')
 const form = reactive({ username: 'admin', password: '', code: '', uuid: '' })
 
-const rules = {
-  required: (v: string): boolean | string => !!v || '必填项',
-}
-
-const captchaDataUrl = computed<string>(() =>
-  `data:image/svg+xml;utf8,${encodeURIComponent(captcha.value.img)}`,
+const captchaDataUrl = computed<string>(
+  () => `data:image/svg+xml;utf8,${encodeURIComponent(captcha.value.img)}`,
 )
 
 async function loadCaptcha(): Promise<void> {

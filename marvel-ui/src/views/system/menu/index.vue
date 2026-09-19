@@ -81,17 +81,35 @@
         <template #item.actions="{ item }">
           <v-tooltip v-if="auth.hasPerm('system:menu:add')" text="添加子菜单">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-plus" size="18" class="mr-3 text-secondary" @click="openAdd(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-plus"
+                size="18"
+                class="mr-3 text-secondary"
+                @click="openAdd(item)"
+              />
             </template>
           </v-tooltip>
           <v-tooltip v-if="auth.hasPerm('system:menu:edit')" text="编辑">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-pencil" size="18" class="mr-3 text-secondary" @click="openEdit(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-pencil"
+                size="18"
+                class="mr-3 text-secondary"
+                @click="openEdit(item)"
+              />
             </template>
           </v-tooltip>
           <v-tooltip v-if="auth.hasPerm('system:menu:remove')" text="删除">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-delete" size="18" class="text-error" @click="onDelete(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-delete"
+                size="18"
+                class="text-error"
+                @click="onDelete(item)"
+              />
             </template>
           </v-tooltip>
         </template>
@@ -101,27 +119,38 @@
     <v-dialog v-model="dialog" width="560">
       <v-card :title="form.menuId ? '修改菜单' : '新增菜单'" rounded="xl">
         <v-card-text>
-          <v-select
-            v-model="form.parentId"
-            :items="parentOptions"
-            item-title="menuName"
-            item-value="menuId"
-            label="上级菜单"
-          />
-          <v-text-field v-model="form.menuName" label="菜单名称" />
-          <v-radio-group v-model="form.menuType" inline label="类型">
-            <v-radio label="目录" value="M" />
-            <v-radio label="菜单" value="C" />
-            <v-radio label="按钮" value="F" />
-          </v-radio-group>
-          <v-text-field v-model="form.path" label="路由地址" />
-          <v-text-field
-            v-if="form.menuType === 'C'"
-            v-model="form.component"
-            label="组件路径（如 system/user/index）"
-          />
-          <v-text-field v-model="form.perms" label="权限标识" />
-          <v-text-field v-model.number="form.orderNum" label="显示顺序" type="number" />
+          <v-form ref="formRef" @submit.prevent="onSave">
+            <v-select
+              v-model="form.parentId"
+              :items="parentOptions"
+              item-title="menuName"
+              item-value="menuId"
+              label="上级菜单"
+            />
+            <v-text-field v-model="form.menuName" label="菜单名称" :rules="['$required']" />
+            <v-radio-group v-model="form.menuType" inline label="类型">
+              <v-radio label="目录" value="M" />
+              <v-radio label="菜单" value="C" />
+              <v-radio label="按钮" value="F" />
+            </v-radio-group>
+            <v-text-field
+              v-model="form.path"
+              label="路由地址"
+              :rules="[['requiredWhen', () => form.menuType !== 'F', '路由地址不能为空']]"
+            />
+            <v-text-field
+              v-if="form.menuType === 'C'"
+              v-model="form.component"
+              label="组件路径（如 system/user/index）"
+              :rules="[['requiredWhen', () => form.menuType === 'C', '组件路径不能为空']]"
+            />
+            <v-text-field
+              v-model="form.perms"
+              label="权限标识"
+              :rules="[['requiredWhen', () => form.menuType === 'F', '权限标识不能为空']]"
+            />
+            <v-text-field v-model.number="form.orderNum" label="显示顺序" type="number" />
+          </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -131,7 +160,9 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{ snack.text }}</v-snackbar>
+    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{
+      snack.text
+    }}</v-snackbar>
   </div>
 </template>
 
@@ -163,6 +194,7 @@ const auth = useAuthStore()
 const tree = ref<SysMenuRow[]>([])
 const loading = ref(false)
 const dialog = ref(false)
+const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 /** 展开节点 id 集合；懒加载模式下默认折叠 */
 const expandedIds = ref<Set<string>>(new Set())
 const parentOptions = ref<SysMenuRow[]>([])
@@ -307,6 +339,8 @@ async function openEdit(item: SysMenuRow): Promise<void> {
 }
 
 async function onSave(): Promise<void> {
+  const valid = await formRef.value?.validate()
+  if (valid && !valid.valid) return
   try {
     if (form.menuId) {
       await http.put<null>('/system/menu', form)

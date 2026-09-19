@@ -5,6 +5,8 @@ import type { LoginBody, LoginResult, MenuNode, UserInfoResult } from '@/types/a
 interface AuthState {
   token: string
   nickname: string
+  /** 头像 URL（空则用昵称首字） */
+  avatar: string
   roles: string[]
   permissions: string[]
   /** 后端原始菜单树（含 menuType/component，供动态路由注册与侧边栏共用） */
@@ -19,6 +21,7 @@ export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     token: localStorage.getItem('token') ?? '',
     nickname: '',
+    avatar: '',
     roles: [],
     permissions: [],
     menus: [],
@@ -37,6 +40,7 @@ export const useAuthStore = defineStore('auth', {
     async fetchInfo(): Promise<void> {
       const info = await http.get<UserInfoResult>('/auth/getInfo')
       this.nickname = info.user.nickname
+      this.avatar = info.user.avatar ?? ''
       this.roles = info.roles
       this.permissions = info.permissions
       this.menus = (await http.get<MenuNode[]>('/auth/getRouters')) ?? []
@@ -50,6 +54,7 @@ export const useAuthStore = defineStore('auth', {
     reset(): void {
       this.token = ''
       this.nickname = ''
+      this.avatar = ''
       this.roles = []
       this.permissions = []
       this.menus = []

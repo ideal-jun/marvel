@@ -6,9 +6,11 @@ import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.marvel.common.exception.BusinessException;
+import com.marvel.module.system.entity.SysDept;
 import com.marvel.module.system.entity.SysRole;
 import com.marvel.module.system.entity.SysUser;
 import com.marvel.module.system.entity.SysUserRole;
+import com.marvel.module.system.mapper.SysDeptMapper;
 import com.marvel.module.system.mapper.SysUserRoleMapper;
 import com.marvel.module.system.service.DataScope;
 import com.marvel.module.system.service.DataScopeService;
@@ -41,6 +43,7 @@ class SysUserServiceImplTest {
     private static final String OLD_PASSWORD_HASH = new BCryptPasswordEncoder().encode(OLD_PASSWORD);
 
     private SysUserRoleMapper userRoleMapper;
+    private SysDeptMapper deptMapper;
     private SysRoleService roleService;
     private DataScopeService dataScopeService;
     private StpLogic stpLogic;
@@ -50,6 +53,7 @@ class SysUserServiceImplTest {
     @BeforeEach
     void setUp() {
         userRoleMapper = mock(SysUserRoleMapper.class);
+        deptMapper = mock(SysDeptMapper.class);
         roleService = mock(SysRoleService.class);
         dataScopeService = mock(DataScopeService.class);
         when(dataScopeService.current()).thenReturn(DataScope.allData());
@@ -63,7 +67,8 @@ class SysUserServiceImplTest {
         StpUtil.setStpLogic(stpLogic);
 
         // spy 掉 MyBatis-Plus 基类 CRUD，聚焦本类业务规则（密码/越权/踢下线）
-        service = org.mockito.Mockito.spy(new SysUserServiceImpl(userRoleMapper, roleService, dataScopeService));
+        service = org.mockito.Mockito.spy(
+                new SysUserServiceImpl(userRoleMapper, deptMapper, roleService, dataScopeService));
     }
 
     @AfterEach
@@ -299,5 +304,75 @@ class SysUserServiceImplTest {
         verify(service).updateById(updated.capture());
         assertThat(new BCryptPasswordEncoder().matches("NewPass12", updated.getValue().getPassword())).isTrue();
         verify(stpLogic).logout(5L);
+    }
+
+    @Test
+    void getProfileMasksPassword() {
+        SysUser db = new SysUser();
+        db.setUserId(5L);
+        db.setPassword("secret-hash");
+        stubGetById(5L, db);
+
+        assertThat(service.getProfile(5L).getPassword()).isNull();
+    }
+
+    @Test
+    void getProfileFillsDeptName() {
+        SysUser db = new SysUser();
+        db.setUserId(5L);
+        db.setDeptId(100L);
+        stubGetById(5L, db);
+        SysDept dept = new SysDept();
+        dept.setDeptId(100L);
+        dept.setDeptName("研发部");
+        when(deptMapper.selectById(100L)).thenReturn(dept);
+
+        assertThat(service.getProfile(5L).getDeptName()).isEqualTo("研发部");
+    }
+
+    @Test
+    void getProfileThrowsWhenUserMissing() {
+        stubGetById(9L, null);
+
+        assertThatThrownBy(() -> service.getProfile(9L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("用户不存在");
+    }
+
+    @Test
+    void updateProfileOnlyWritesWhitelistedFields() {
+        SysUser db = new SysUser();
+        db.setUserId(5L);
+        stubGetById(5L, db);
+        doReturn(true).when(service).updateById(any(SysUser.class));
+
+        SysUser input = new SysUser();
+        input.setUserId(999L);
+        input.setUsername("hacker");
+        input.setPassword("plain");
+        input.setStatus("1");
+        input.setDeptId(88L);
+        input.setNickname("Alice");
+        input.setEmail("alice@example.com");
+        input.setPhone("13800000000");
+        input.setSex("1");
+        input.setAvatar("/u/x.png");
+
+        service.updateProfile(5L, input);
+
+        ArgumentCaptor<SysUser> updated = ArgumentCaptor.forClass(SysUser.class);
+        verify(service).updateById(updated.capture());
+        SysUser saved = updated.getValue();
+        assertThat(saved.getUserId()).isEqualTo(5L);
+        assertThat(saved.getNickname()).isEqualTo("Alice");
+        assertThat(saved.getEmail()).isEqualTo("alice@example.com");
+        assertThat(saved.getPhone()).isEqualTo("13800000000");
+        assertThat(saved.getSex()).isEqualTo("1");
+        assertThat(saved.getAvatar()).isEqualTo("/u/x.png");
+        // 白名单之外一律不写入，防止越权改账号/状态/部门
+        assertThat(saved.getUsername()).isNull();
+        assertThat(saved.getPassword()).isNull();
+        assertThat(saved.getStatus()).isNull();
+        assertThat(saved.getDeptId()).isNull();
     }
 }

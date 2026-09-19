@@ -8,10 +8,13 @@ import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.marvel.common.constant.Constants;
 import com.marvel.common.exception.BusinessException;
 import com.marvel.common.security.PasswordPolicy;
+import com.marvel.common.validation.ContactPolicy;
 import com.marvel.framework.config.CacheConfig;
+import com.marvel.module.system.entity.SysDept;
 import com.marvel.module.system.entity.SysRole;
 import com.marvel.module.system.entity.SysUser;
 import com.marvel.module.system.entity.SysUserRole;
+import com.marvel.module.system.mapper.SysDeptMapper;
 import com.marvel.module.system.mapper.SysUserMapper;
 import com.marvel.module.system.mapper.SysUserRoleMapper;
 import com.marvel.module.system.service.DataScope;
@@ -47,6 +50,7 @@ import java.util.stream.Collectors;
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
     private final SysUserRoleMapper userRoleMapper;
+    private final SysDeptMapper deptMapper;
     private final SysRoleService roleService;
     private final DataScopeService dataScopeService;
     /** BCrypt 校验器无状态，可安全复用 */
@@ -93,6 +97,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     public void createUser(SysUser user, List<Long> roleIds) {
         checkUsernameUnique(user.getUsername(), null);
         validatePassword(user.getPassword());
+        validateContact(user.getEmail(), user.getPhone());
         checkPrivilegeEscalation(null, roleIds);
         user.setUserId(null);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -115,6 +120,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             throw new BusinessException("不允许停用超级管理员");
         }
         checkUsernameUnique(user.getUsername(), user.getUserId());
+        validateContact(user.getEmail(), user.getPhone());
         // 基本信息 update 不允许改密码，密码变更走独立接口
         user.setPassword(null);
         this.updateById(user);
@@ -187,6 +193,40 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    public SysUser getProfile(Long userId) {
+        SysUser user = getById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        // 个人资料接口绝不外发密码密文
+        user.setPassword(null);
+        // deptName 为非表字段，按 deptId 补充，供个人中心展示所属部门
+        if (user.getDeptId() != null) {
+            SysDept dept = deptMapper.selectById(user.getDeptId());
+            user.setDeptName(dept == null ? null : dept.getDeptName());
+        }
+        return user;
+    }
+
+    @Override
+    public void updateProfile(Long userId, SysUser profile) {
+        SysUser db = getById(userId);
+        if (db == null) {
+            throw new BusinessException("用户不存在");
+        }
+        validateContact(profile.getEmail(), profile.getPhone());
+        // 字段白名单：只允许本人维护展示类信息，账号/部门/状态/密码一律不在此接口变更
+        SysUser update = new SysUser();
+        update.setUserId(userId);
+        update.setNickname(profile.getNickname());
+        update.setEmail(profile.getEmail());
+        update.setPhone(profile.getPhone());
+        update.setSex(profile.getSex());
+        update.setAvatar(profile.getAvatar());
+        this.updateById(update);
+    }
+
+    @Override
     public List<Long> getRoleIdsByUserId(Long userId) {
         return userRoleMapper.selectList(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId))
                 .stream().map(SysUserRole::getRoleId).toList();
@@ -226,6 +266,18 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         String error = PasswordPolicy.validate(password);
         if (error != null) {
             throw new BusinessException(error);
+        }
+    }
+
+    /** 联系方式格式校验，规则集中在 {@link ContactPolicy} */
+    private void validateContact(String email, String phone) {
+        String emailError = ContactPolicy.validateEmail(email);
+        if (emailError != null) {
+            throw new BusinessException(emailError);
+        }
+        String phoneError = ContactPolicy.validatePhone(phone);
+        if (phoneError != null) {
+            throw new BusinessException(phoneError);
         }
     }
 

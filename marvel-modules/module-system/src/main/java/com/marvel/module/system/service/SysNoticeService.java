@@ -38,4 +38,7 @@ public interface SysNoticeService extends IService<SysNotice> {
 
     /** 标记全部已读 */
     void markAllRead(Long userId);
+
+    /** 删除我的消息（按用户软删除，不影响其他用户与公告本身） */
+    void deleteMyNotices(Long userId, List<Long> noticeIds);
 }

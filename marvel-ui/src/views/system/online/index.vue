@@ -5,7 +5,15 @@
       <template #actions>
         <v-tooltip text="刷新" location="bottom">
           <template #activator="{ props }">
-            <v-btn v-bind="props" icon="mdi-refresh" variant="text" density="comfortable" rounded="lg" :loading="loading" @click="load" />
+            <v-btn
+              v-bind="props"
+              icon="mdi-refresh"
+              variant="text"
+              density="comfortable"
+              rounded="lg"
+              :loading="loading"
+              @click="load"
+            />
           </template>
         </v-tooltip>
       </template>
@@ -45,7 +53,9 @@
       </v-data-table>
     </ListPanel>
 
-    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{ snack.text }}</v-snackbar>
+    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{
+      snack.text
+    }}</v-snackbar>
   </div>
 </template>
 
@@ -104,7 +114,10 @@ async function load(): Promise<void> {
 }
 
 async function onKickout(row: OnlineRow): Promise<void> {
-  if (!window.confirm(`确认将用户「${row.username ?? row.userId}」强制下线？其全部活跃会话将被注销。`)) return
+  if (
+    !window.confirm(`确认将用户「${row.username ?? row.userId}」强制下线？其全部活跃会话将被注销。`)
+  )
+    return
   try {
     await http.delete<null>(`/system/online/${row.userId}`)
     notify('已强制下线')

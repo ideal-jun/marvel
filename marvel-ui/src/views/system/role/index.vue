@@ -68,12 +68,24 @@
         <template #item.actions="{ item }">
           <v-tooltip v-if="auth.hasPerm('system:role:edit')" text="编辑">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-pencil" size="18" class="mr-3 text-secondary" @click="openEdit(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-pencil"
+                size="18"
+                class="mr-3 text-secondary"
+                @click="openEdit(item)"
+              />
             </template>
           </v-tooltip>
           <v-tooltip v-if="auth.hasPerm('system:role:remove')" text="删除">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-delete" size="18" class="text-error" @click="onDelete(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-delete"
+                size="18"
+                class="text-error"
+                @click="onDelete(item)"
+              />
             </template>
           </v-tooltip>
         </template>
@@ -83,20 +95,22 @@
     <v-dialog v-model="dialog" width="560">
       <v-card :title="form.roleId ? '修改角色' : '新增角色'" rounded="xl">
         <v-card-text>
-          <v-text-field v-model="form.roleName" label="角色名称" />
-          <v-text-field v-model="form.roleKey" label="权限字符" />
-          <v-text-field v-model.number="form.roleSort" label="显示顺序" type="number" />
-          <!-- 菜单权限树：勾选后随表单提交 -->
-          <div class="text-caption text-secondary mb-1">菜单权限</div>
-          <v-treeview
-            v-model="menuIds"
-            :items="menuTree"
-            item-value="id"
-            item-title="menuName"
-            select-strategy="classic"
-            open-on-click
-            density="compact"
-          />
+          <v-form ref="formRef" @submit.prevent="onSave">
+            <v-text-field v-model="form.roleName" label="角色名称" :rules="['$required']" />
+            <v-text-field v-model="form.roleKey" label="权限字符" :rules="['$required']" />
+            <v-text-field v-model.number="form.roleSort" label="显示顺序" type="number" />
+            <!-- 菜单权限树：勾选后随表单提交 -->
+            <div class="text-caption text-secondary mb-1">菜单权限</div>
+            <v-treeview
+              v-model="menuIds"
+              :items="menuTree"
+              item-value="id"
+              item-title="menuName"
+              select-strategy="classic"
+              open-on-click
+              density="compact"
+            />
+          </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -106,7 +120,9 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{ snack.text }}</v-snackbar>
+    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{
+      snack.text
+    }}</v-snackbar>
   </div>
 </template>
 
@@ -136,6 +152,7 @@ const rows = ref<SysRoleRow[]>([])
 const total = ref(0)
 const loading = ref(false)
 const dialog = ref(false)
+const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 const menuIds = ref<number[]>([])
 const menuTree = ref<MenuTreeItem[]>([])
 
@@ -146,7 +163,13 @@ interface RoleQuery {
   roleKey: string | null
   status: string | null
 }
-const query = reactive<RoleQuery>({ pageNum: 1, pageSize: 10, roleName: null, roleKey: null, status: null })
+const query = reactive<RoleQuery>({
+  pageNum: 1,
+  pageSize: 10,
+  roleName: null,
+  roleKey: null,
+  status: null,
+})
 const form = reactive<Partial<SysRoleRow> & { menuIds?: number[] }>({})
 const snack = reactive({ show: false, text: '', color: 'success' })
 
@@ -166,7 +189,9 @@ function notify(text: string, color: 'success' | 'error' = 'success'): void {
 async function load(): Promise<void> {
   loading.value = true
   try {
-    const page = await http.get<PageResult<SysRoleRow>>('/system/role/page', { params: { ...query } })
+    const page = await http.get<PageResult<SysRoleRow>>('/system/role/page', {
+      params: { ...query },
+    })
     rows.value = page.records
     total.value = page.total
   } catch (e) {
@@ -229,6 +254,8 @@ async function loadMenus(): Promise<void> {
 }
 
 async function onSave(): Promise<void> {
+  const valid = await formRef.value?.validate()
+  if (valid && !valid.valid) return
   try {
     const payload = { ...form, menuIds: menuIds.value }
     if (form.roleId) {

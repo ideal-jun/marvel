@@ -59,7 +59,7 @@
     </template>
     <template #no-data>
       <div class="h-170px flex flex-col justify-center items-center">
-        <v-icon  icon="mdi-text-box-search-outline" size="120"></v-icon>
+        <v-icon icon="mdi-text-box-search-outline" size="120"></v-icon>
         <span>您的搜索结果将显示在这里</span>
       </div>
     </template>
@@ -123,5 +123,7 @@ const allItems = computed<PaletteItem[]>(() => {
 /** 默认不渲染条目，输入关键词后才出结果（菜单多时省掉首屏渲染与过滤开销） */
 const items = computed<PaletteItem[]>(() => (search.value.trim() ? allItems.value : []))
 
-const noDataText = computed<string>(() => (search.value.trim() ? '无匹配菜单' : '输入关键词搜索菜单'))
+const noDataText = computed<string>(() =>
+  search.value.trim() ? '无匹配菜单' : '输入关键词搜索菜单',
+)
 </script>

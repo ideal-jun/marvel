@@ -83,7 +83,15 @@
         </v-btn>
         <v-tooltip text="刷新" location="bottom">
           <template #activator="{ props }">
-            <v-btn v-bind="props" icon="mdi-refresh" variant="text" density="comfortable" rounded="lg" :loading="loading" @click="load" />
+            <v-btn
+              v-bind="props"
+              icon="mdi-refresh"
+              variant="text"
+              density="comfortable"
+              rounded="lg"
+              :loading="loading"
+              @click="load"
+            />
           </template>
         </v-tooltip>
       </template>
@@ -109,12 +117,18 @@
           </v-chip>
         </template>
         <template #item.msg="{ item }">
-          <span :class="item.status === '0' ? 'text-secondary' : 'text-error'" class="text-body-2">{{ item.msg }}</span>
+          <span
+            :class="item.status === '0' ? 'text-secondary' : 'text-error'"
+            class="text-body-2"
+            >{{ item.msg }}</span
+          >
         </template>
       </v-data-table-server>
     </ListPanel>
 
-    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{ snack.text }}</v-snackbar>
+    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{
+      snack.text
+    }}</v-snackbar>
   </div>
 </template>
 
@@ -187,7 +201,9 @@ async function load(): Promise<void> {
   try {
     query.beginTime = beginDate.value ? fmtLocal(beginDate.value) : undefined
     query.endTime = endDate.value ? fmtLocal(endDate.value, true) : undefined
-    const page = await http.get<PageResult<SysLogininforRow>>('/system/logininfor/page', { params: { ...query } })
+    const page = await http.get<PageResult<SysLogininforRow>>('/system/logininfor/page', {
+      params: { ...query },
+    })
     rows.value = page.records
     total.value = page.total
   } catch (e) {

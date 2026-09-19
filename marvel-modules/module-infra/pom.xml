@@ -28,6 +28,11 @@
             <groupId>com.marvel</groupId>
             <artifactId>marvel-framework</artifactId>
         </dependency>
+        <!-- MinIO 对象存储（可用 marvel.storage.type=minio 切换） -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

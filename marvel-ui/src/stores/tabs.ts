@@ -12,7 +12,12 @@ export interface TabItem {
 }
 
 /** 首页固定页签：常驻页签条首位（不依赖是否访问过），不可关闭、不可置顶 */
-const HOME_TAB: TabItem = { path: '/', title: '首页', icon: 'mdi-view-dashboard-outline', affix: true }
+const HOME_TAB: TabItem = {
+  path: '/',
+  title: '首页',
+  icon: 'mdi-view-dashboard-outline',
+  affix: true,
+}
 
 /**
  * 多页签 Store：首页常驻，路由切换时收录页签，支持关闭（单个/其他/左侧/右侧/全部）与置顶。
@@ -99,7 +104,10 @@ export const useTabsStore = defineStore('tabs', {
       const idx = this.visited.findIndex((t) => t.path === path)
       if (idx < 0) return null
       const removed = new Set(
-        this.visited.slice(0, idx).filter((t) => !t.affix && !t.pinned).map((t) => t.path),
+        this.visited
+          .slice(0, idx)
+          .filter((t) => !t.affix && !t.pinned)
+          .map((t) => t.path),
       )
       this.visited = this.visited.filter((t) => !removed.has(t.path))
       return removed.has(currentPath) ? path : null
@@ -110,7 +118,10 @@ export const useTabsStore = defineStore('tabs', {
       const idx = this.visited.findIndex((t) => t.path === path)
       if (idx < 0) return null
       const removed = new Set(
-        this.visited.slice(idx + 1).filter((t) => !t.affix && !t.pinned).map((t) => t.path),
+        this.visited
+          .slice(idx + 1)
+          .filter((t) => !t.affix && !t.pinned)
+          .map((t) => t.path),
       )
       this.visited = this.visited.filter((t) => !removed.has(t.path))
       return removed.has(currentPath) ? path : null

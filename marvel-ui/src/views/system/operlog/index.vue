@@ -93,7 +93,15 @@
         </v-btn>
         <v-tooltip text="刷新" location="bottom">
           <template #activator="{ props }">
-            <v-btn v-bind="props" icon="mdi-refresh" variant="text" density="comfortable" rounded="lg" :loading="loading" @click="load" />
+            <v-btn
+              v-bind="props"
+              icon="mdi-refresh"
+              variant="text"
+              density="comfortable"
+              rounded="lg"
+              :loading="loading"
+              @click="load"
+            />
           </template>
         </v-tooltip>
       </template>
@@ -121,14 +129,22 @@
         <template #item.method="{ item }">
           <v-tooltip :text="item.method" location="top">
             <template #activator="{ props: p }">
-              <span v-bind="p" class="text-body-2 text-secondary truncate inline-block max-w-38 align-middle cursor-help">{{ item.method }}</span>
+              <span
+                v-bind="p"
+                class="text-body-2 text-secondary truncate inline-block max-w-38 align-middle cursor-help"
+                >{{ item.method }}</span
+              >
             </template>
           </v-tooltip>
         </template>
         <template #item.operParam="{ item }">
           <v-tooltip v-if="item.operParam" :text="item.operParam" location="top">
             <template #activator="{ props: p }">
-              <span v-bind="p" class="text-caption text-secondary truncate inline-block max-w-44 align-middle cursor-help">参数</span>
+              <span
+                v-bind="p"
+                class="text-caption text-secondary truncate inline-block max-w-44 align-middle cursor-help"
+                >参数</span
+              >
             </template>
           </v-tooltip>
           <span v-else class="text-disabled text-caption">-</span>
@@ -136,7 +152,11 @@
         <template #item.errorMsg="{ item }">
           <v-tooltip v-if="item.errorMsg" :text="item.errorMsg" location="top">
             <template #activator="{ props: p }">
-              <span v-bind="p" class="text-caption text-error truncate inline-block max-w-30 align-middle cursor-help">{{ item.errorMsg }}</span>
+              <span
+                v-bind="p"
+                class="text-caption text-error truncate inline-block max-w-30 align-middle cursor-help"
+                >{{ item.errorMsg }}</span
+              >
             </template>
           </v-tooltip>
           <span v-else class="text-disabled text-caption">-</span>
@@ -144,7 +164,9 @@
       </v-data-table-server>
     </ListPanel>
 
-    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{ snack.text }}</v-snackbar>
+    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{
+      snack.text
+    }}</v-snackbar>
   </div>
 </template>
 
@@ -229,7 +251,9 @@ async function load(): Promise<void> {
   try {
     query.beginTime = beginDate.value ? fmtLocal(beginDate.value) : undefined
     query.endTime = endDate.value ? fmtLocal(endDate.value, true) : undefined
-    const page = await http.get<PageResult<SysOperLogRow>>('/system/operlog/page', { params: { ...query } })
+    const page = await http.get<PageResult<SysOperLogRow>>('/system/operlog/page', {
+      params: { ...query },
+    })
     rows.value = page.records
     total.value = page.total
   } catch (e) {

@@ -15,4 +15,7 @@ public class SysNoticeRead {
     private Long userId;
 
     private LocalDateTime readTime;
+
+    /** 0=正常 1=该用户已删除（软删除，仅影响当前用户的消息列表） */
+    private Integer deleted;
 }

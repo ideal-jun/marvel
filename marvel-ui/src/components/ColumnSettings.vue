@@ -5,7 +5,13 @@
     <template #activator="{ props: menuProps }">
       <v-tooltip text="列设置" location="bottom">
         <template #activator="{ props: tipProps }">
-          <v-btn v-bind="mergeProps(menuProps, tipProps)" icon="mdi-table-cog" variant="text" density="comfortable" rounded="lg" />
+          <v-btn
+            v-bind="mergeProps(menuProps, tipProps)"
+            icon="mdi-table-cog"
+            variant="text"
+            density="comfortable"
+            rounded="lg"
+          />
         </template>
       </v-tooltip>
     </template>
@@ -39,12 +45,7 @@
           <template #prepend>
             <v-icon icon="mdi-drag-vertical" size="16" class="text-secondary" />
           </template>
-          <v-checkbox
-            v-model="c.visible"
-            :label="c.title"
-            density="compact"
-            hide-details
-          />
+          <v-checkbox v-model="c.visible" :label="c.title" density="compact" hide-details />
           <template #append>
             <!-- 右侧固定（操作列）由页面声明，不提供取消 -->
             <v-tooltip

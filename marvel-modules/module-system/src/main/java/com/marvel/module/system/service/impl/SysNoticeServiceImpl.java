@@ -84,6 +84,11 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
                 wrapper.notIn(SysNotice::getNoticeId, readIds);
             }
         }
+        // 用户已删除的消息不再出现在「我的消息」列表
+        List<Long> deletedIds = readMapper.selectDeletedNoticeIds(userId);
+        if (!deletedIds.isEmpty()) {
+            wrapper.notIn(SysNotice::getNoticeId, deletedIds);
+        }
         IPage<SysNotice> page = this.page(new Page<>(pageNum, pageSize), wrapper);
 
         List<Long> pageIds = page.getRecords().stream().map(SysNotice::getNoticeId).toList();
@@ -134,6 +139,14 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
             rows.add(toRead(userId, noticeId));
         }
         readMapper.insert(rows);
+    }
+
+    @Override
+    public void deleteMyNotices(Long userId, List<Long> noticeIds) {
+        if (noticeIds == null || noticeIds.isEmpty()) {
+            return;
+        }
+        readMapper.markDeleted(userId, noticeIds);
     }
 
     private SysNoticeRead toRead(Long userId, Long noticeId) {

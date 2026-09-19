@@ -10,6 +10,7 @@ import com.marvel.common.result.R;
 import com.marvel.module.infra.entity.SysFile;
 import com.marvel.module.infra.mapper.SysFileMapper;
 import com.marvel.module.infra.service.StorageService;
+import com.marvel.module.infra.service.StorageSupport;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,14 +29,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
  * infra 域文件接口，路径前缀 /infra/**（与未来网关路由一致）。
  *
- * <p>下载走鉴权接口（{@code infra:file:download}）并强制 attachment；
- * {@code /uploads/**} 仍用于前端直接展示图片，但下载/管理以本控制器为准。
+ * <p>存储实现可切换：本地磁盘（默认）或 MinIO 对象存储，见 {@link StorageService}。
+ * 下载走鉴权接口（{@code infra:file:download}）并强制 attachment；
+ * 头像上传（{@code /infra/file/avatar}）仅需登录且限图片类型，供个人中心使用。
  */
 @Slf4j
 @RestController
@@ -46,11 +49,26 @@ public class InfraFileController {
     private final StorageService storageService;
     private final SysFileMapper fileMapper;
 
-    /** 上传文件，返回可访问的 URL（类型/扩展名白名单校验见存储实现） */
+    /** 上传文件，返回可访问的 URL 与存储定位（类型/扩展名白名单校验见存储实现） */
     @SaCheckPermission("infra:file:upload")
     @PostMapping("/upload")
     public R<Map<String, String>> upload(@RequestParam("file") MultipartFile file) throws Exception {
-        return R.ok(Map.of("url", storageService.upload(file)));
+        String path = storageService.upload(file);
+        Map<String, String> data = new LinkedHashMap<>();
+        data.put("url", storageService.toUrl(path));
+        data.put("path", path);
+        return R.ok(data);
+    }
+
+    /** 头像上传：登录即可用，限图片类型，返回可直接展示的 URL */
+    @PostMapping("/avatar")
+    public R<Map<String, String>> avatar(@RequestParam("file") MultipartFile file) throws Exception {
+        StorageSupport.validate(file, StorageSupport.ALLOWED_IMAGE_EXTENSIONS);
+        String path = storageService.upload(file);
+        Map<String, String> data = new LinkedHashMap<>();
+        data.put("url", storageService.toUrl(path));
+        data.put("path", path);
+        return R.ok(data);
     }
 
     /** 文件分页列表 */
@@ -75,7 +93,7 @@ public class InfraFileController {
                 .last("LIMIT " + size)));
     }
 
-    /** 下载：按存储根目录安全解析，强制 attachment 并携带原始文件名 */
+    /** 下载：按存储定位安全解析，强制 attachment 并携带原始文件名 */
     @SaCheckPermission("infra:file:download")
     @GetMapping("/download/{fileId}")
     public void download(@PathVariable Long fileId, HttpServletResponse response) throws IOException {

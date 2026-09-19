@@ -112,10 +112,13 @@ function onSwitch(path: string): void {
 function closeBy(kind: 'current' | 'others' | 'left' | 'right', path: string): void {
   const cur = route.path
   const next =
-    kind === 'current' ? tabs.removeTab(path, cur)
-    : kind === 'others' ? tabs.closeOthers(path, cur)
-    : kind === 'left' ? tabs.closeLeft(path, cur)
-    : tabs.closeRight(path, cur)
+    kind === 'current'
+      ? tabs.removeTab(path, cur)
+      : kind === 'others'
+        ? tabs.closeOthers(path, cur)
+        : kind === 'left'
+          ? tabs.closeLeft(path, cur)
+          : tabs.closeRight(path, cur)
   if (next) void router.push(next)
 }
 
@@ -320,7 +323,9 @@ watch(
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 .chrome-tab__close:hover {
   background: #9ca3af;

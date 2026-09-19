@@ -5,7 +5,12 @@ import 'vuetify/styles'
 // 实验室组件（VCommandPalette 顶栏命令面板）的样式不在 vuetify/styles 聚合产物内，需单独引入；
 // 该文件自带 @layer vuetify-components，与项目级联层架构一致
 import 'vuetify/lib/labs/VCommandPalette/VCommandPalette.css'
+// VTreeview 样式同样不在 vuetify/styles 聚合产物内，需单独引入；
+// 该文件自带 @layer vuetify-components，与项目级联层架构一致
+import 'vuetify/lib/components/VTreeview/VTreeviewItem.css'
 import { createVuetify } from 'vuetify'
+// 简体中文语言包：内置组件文案 + 校验规则消息（$vuetify.rules.*）都来自这里
+import { zhHans } from 'vuetify/locale'
 import { forVuetify } from '../theme/breakpoints'
 
 /**
@@ -14,6 +19,12 @@ import { forVuetify } from '../theme/breakpoints'
  * 改主题色全局联动；display.thresholds 与 UnoCSS 断点共用 breakpoints.ts。
  */
 export default createVuetify({
+  // 未配置时 Vuetify 默认 en，规则消息与内置文案都会是英文
+  locale: {
+    locale: 'zhHans',
+    fallback: 'en',
+    messages: { zhHans },
+  },
   theme: {
     // 启动时从 localStorage 恢复上次选择（由 stores/app.ts 维护写入）
     defaultTheme: localStorage.getItem('marvel-theme') === 'dark' ? 'dark' : 'light',
@@ -35,7 +46,7 @@ export default createVuetify({
         variables: {
           'border-opacity': 0.12,
           'high-emphasis-opacity': 0.82,
-          'medium-emphasis-opacity': 0.60,
+          'medium-emphasis-opacity': 0.6,
           'disabled-opacity': 0.38,
           'idle-opacity': 0.04,
           'hover-opacity': 0.04,
@@ -44,7 +55,7 @@ export default createVuetify({
           'activated-opacity': 0.12,
           'pressed-opacity': 0.12,
           'dragged-opacity': 0.08,
-        }
+        },
       },
       dark: {
         dark: true,
@@ -65,7 +76,7 @@ export default createVuetify({
         variables: {
           'border-opacity': 0.12,
           'high-emphasis-opacity': 0.82,
-          'medium-emphasis-opacity': 0.60,
+          'medium-emphasis-opacity': 0.6,
           'disabled-opacity': 0.38,
           'idle-opacity': 0.04,
           'hover-opacity': 0.04,
@@ -73,8 +84,8 @@ export default createVuetify({
           'selected-opacity': 0.08,
           'activated-opacity': 0.12,
           'pressed-opacity': 0.12,
-          'dragged-opacity': 0.08
-        }
+          'dragged-opacity': 0.08,
+        },
       },
     },
   },
@@ -86,35 +97,38 @@ export default createVuetify({
     VBtn: { rounded: 'lg' },
     // VCard 保持 Vuetify 默认（elevated 变体自带浅阴影），不做额外覆盖
     VCard: {
-      elevation: 2
+      elevation: 2,
     },
     VExpansionPanels: {
       static: true,
       hover: false,
-      elevation: 2
+      elevation: 2,
     },
     // VExpansionPanel: {
-      
-    // }, 
-    VTextField: { variant: 'outlined', density: 'comfortable', color: 'primary' },
-    VSelect: { variant: 'outlined', density: 'comfortable', color: 'primary'  },
+
+    // },// density="compact"
+    VTextField: { variant: 'outlined', density: 'compact', color: 'primary' },
+    VSelect: { variant: 'outlined', density: 'compact', color: 'primary' },
+    VRadio: { density: 'compact', color: 'primary' },
+    VRow: { density: 'compact' },
     // v-date-input 不继承 VTextField 默认值，需单独声明保持筛选控件风格统一。
     // 显示格式统一 yyyy-MM-dd：内置 date adapter 只认命名格式不认 token 字符串，
     // 故用函数格式化（displayFormat 官方支持函数形式）
     VDateInput: {
       variant: 'outlined',
       color: 'primary',
+      density: 'compact',
       placeholder: 'yyyy-MM-dd',
       displayFormat: (d: Date) =>
         `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
     },
     VDataTable: { rounded: 'lg' },
     VList: {
-      prependGap: "10",
-      indent: "24",
+      prependGap: '10',
+      indent: '24',
       VIcon: {
-        size: 'small'
-      }
-    }
+        size: 'small',
+      },
+    },
   },
 })

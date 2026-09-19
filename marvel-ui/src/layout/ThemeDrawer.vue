@@ -11,7 +11,13 @@
     <div class="pa-5 flex flex-col gap-6">
       <div class="flex items-center justify-between">
         <span class="text-h6 font-bold">主题配置</span>
-        <v-btn icon="mdi-close" variant="text" size="small" rounded="lg" @click="app.themeDrawer = false" />
+        <v-btn
+          icon="mdi-close"
+          variant="text"
+          size="small"
+          rounded="lg"
+          @click="app.themeDrawer = false"
+        />
       </div>
 
       <!-- 暗色模式 -->

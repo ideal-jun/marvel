@@ -34,6 +34,11 @@ export default defineConfig({
   ],
   server: {
     port: 5173,
+    // 编辑器/工具原子写入会在源码目录留下 .*.tmpdir 临时目录，chokidar 监听时可能抛
+    // EBUSY 且无人捕获，直接崩掉 dev server；显式忽略这些中间产物
+    watch: {
+      ignored: ['**/.*.tmpdir/**', '**/*.tmp'],
+    },
     // vuetify autoImport 的组件依赖要等 .vue 模板转换时才被发现，扫描器看不见；
     // 启动即预热全部 .vue（含根组件 App.vue）与入口，让依赖发现在用户访问前完成，
     // 避免浏览中触发依赖预构建的 full-reload 打断 SPA 跳转
@@ -42,11 +47,11 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8081',
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ''),
       },
-      '/uploads': 'http://localhost:8080',
+      '/uploads': 'http://localhost:8081',
     },
   },
 })

@@ -75,6 +75,7 @@ public class SystemApiImpl implements SystemApi {
         dto.setUsername(user.getUsername());
         dto.setPassword(user.getPassword());
         dto.setNickname(user.getNickname());
+        dto.setAvatar(user.getAvatar());
         dto.setDeptId(user.getDeptId());
         dto.setEmail(user.getEmail());
         dto.setPhone(user.getPhone());

@@ -155,13 +155,19 @@
     <v-dialog v-model="typeDialog" width="480">
       <v-card :title="typeForm.dictId ? '修改字典类型' : '新增字典类型'" rounded="xl">
         <v-card-text>
-          <v-text-field v-model="typeForm.dictName" label="字典名称" />
-          <v-text-field v-model="typeForm.dictType" label="类型键（如 sys_yes_no）" />
-          <v-radio-group v-model="typeForm.status" inline label="状态">
-            <v-radio label="正常" value="0" />
-            <v-radio label="停用" value="1" />
-          </v-radio-group>
-          <v-text-field v-model="typeForm.remark" label="备注" />
+          <v-form ref="typeFormRef" @submit.prevent="saveType">
+            <v-text-field v-model="typeForm.dictName" label="字典名称" :rules="['$required']" />
+            <v-text-field
+              v-model="typeForm.dictType"
+              label="类型键（如 sys_yes_no）"
+              :rules="['$required']"
+            />
+            <v-radio-group v-model="typeForm.status" inline label="状态">
+              <v-radio label="正常" value="0" />
+              <v-radio label="停用" value="1" />
+            </v-radio-group>
+            <v-text-field v-model="typeForm.remark" label="备注" />
+          </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -175,14 +181,16 @@
     <v-dialog v-model="dataDialog" width="480">
       <v-card :title="dataForm.dictCode ? '修改字典数据' : '新增字典数据'" rounded="xl">
         <v-card-text>
-          <v-text-field v-model="dataForm.dictLabel" label="标签" />
-          <v-text-field v-model="dataForm.dictValue" label="键值" />
-          <v-text-field v-model.number="dataForm.orderNum" label="排序" type="number" />
-          <v-radio-group v-model="dataForm.status" inline label="状态">
-            <v-radio label="正常" value="0" />
-            <v-radio label="停用" value="1" />
-          </v-radio-group>
-          <v-text-field v-model="dataForm.remark" label="备注" />
+          <v-form ref="dataFormRef" @submit.prevent="saveData">
+            <v-text-field v-model="dataForm.dictLabel" label="标签" :rules="['$required']" />
+            <v-text-field v-model="dataForm.dictValue" label="键值" :rules="['$required']" />
+            <v-text-field v-model.number="dataForm.orderNum" label="排序" type="number" />
+            <v-radio-group v-model="dataForm.status" inline label="状态">
+              <v-radio label="正常" value="0" />
+              <v-radio label="停用" value="1" />
+            </v-radio-group>
+            <v-text-field v-model="dataForm.remark" label="备注" />
+          </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -192,7 +200,9 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{ snack.text }}</v-snackbar>
+    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{
+      snack.text
+    }}</v-snackbar>
   </div>
 </template>
 
@@ -211,9 +221,9 @@ const STATUS_OPTIONS = [
 ]
 
 interface DictQuery {
-  dictName: string,
-  dictType: string,
-  status: string | null | string[],
+  dictName: string
+  dictType: string
+  status: string | null | string[]
 }
 
 const auth = useAuthStore()
@@ -222,7 +232,8 @@ const auth = useAuthStore()
 const types = ref<SysDictTypeRow[]>([])
 const typeLoading = ref(false)
 const typeDialog = ref(false)
-const typeQuery = reactive<DictQuery>({ dictName: '', dictType: '', status: null})
+const typeFormRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
+const typeQuery = reactive<DictQuery>({ dictName: '', dictType: '', status: null })
 const typeForm = reactive<Partial<SysDictTypeRow>>({})
 
 const typeHeaders = [
@@ -238,6 +249,7 @@ const selectedType = ref<SysDictTypeRow | null>(null)
 const dictData = ref<SysDictDataRow[]>([])
 const dataLoading = ref(false)
 const dataDialog = ref(false)
+const dataFormRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 const dataKeyword = ref('')
 const dataForm = reactive<Partial<SysDictDataRow>>({})
 
@@ -258,7 +270,9 @@ function notify(text: string, color: 'success' | 'error' = 'success'): void {
 async function loadTypes(): Promise<void> {
   typeLoading.value = true
   try {
-    types.value = await http.get<SysDictTypeRow[]>('/system/dict/type/list', { params: { ...typeQuery } })
+    types.value = await http.get<SysDictTypeRow[]>('/system/dict/type/list', {
+      params: { ...typeQuery },
+    })
     // 保持当前选中项；若被删除则清空右侧
     if (selectedType.value) {
       selectedType.value = types.value.find((t) => t.dictId === selectedType.value?.dictId) ?? null
@@ -322,6 +336,8 @@ function openTypeEdit(item: SysDictTypeRow): void {
 }
 
 async function saveType(): Promise<void> {
+  const valid = await typeFormRef.value?.validate()
+  if (valid && !valid.valid) return
   try {
     if (typeForm.dictId) {
       await http.put<null>('/system/dict/type', typeForm)
@@ -360,6 +376,8 @@ function openDataEdit(item: SysDictDataRow): void {
 }
 
 async function saveData(): Promise<void> {
+  const valid = await dataFormRef.value?.validate()
+  if (valid && !valid.valid) return
   try {
     if (dataForm.dictCode) {
       await http.put<null>('/system/dict/data', dataForm)

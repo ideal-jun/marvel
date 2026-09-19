@@ -5,7 +5,15 @@
         <div class="text-h6">服务监控</div>
         <v-tooltip text="刷新" location="bottom">
           <template #activator="{ props }">
-            <v-btn v-bind="props" icon="mdi-refresh" variant="text" density="comfortable" rounded="lg" :loading="loading" @click="load" />
+            <v-btn
+              v-bind="props"
+              icon="mdi-refresh"
+              variant="text"
+              density="comfortable"
+              rounded="lg"
+              :loading="loading"
+              @click="load"
+            />
           </template>
         </v-tooltip>
       </div>
@@ -32,7 +40,11 @@
               <v-table density="compact" class="bg-transparent">
                 <thead>
                   <tr>
-                    <th>路径</th><th>总容量</th><th>已用</th><th>可用</th><th>使用率</th>
+                    <th>路径</th>
+                    <th>总容量</th>
+                    <th>已用</th>
+                    <th>可用</th>
+                    <th>使用率</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -66,7 +78,9 @@
       </v-row>
     </div>
 
-    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{ snack.text }}</v-snackbar>
+    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{
+      snack.text
+    }}</v-snackbar>
   </div>
 </template>
 
@@ -90,17 +104,45 @@ interface ServerInfo {
 }
 
 const LABELS: Record<string, string> = {
-  osName: '操作系统', osArch: '系统架构', osVersion: '系统版本', hostName: '主机名',
-  userDir: '项目路径', currentTime: '当前时间',
-  cores: '核心数', systemLoadAverage: '系统负载', cpuLoad: 'CPU 使用率', processCpuLoad: '进程 CPU 使用率',
-  total: '总量/总容量', used: '已用', free: '空闲', usage: '使用率',
-  javaVersion: 'Java 版本', javaVendor: 'Java 厂商', jvmName: 'JVM',
-  startTime: '启动时间', uptime: '运行时长', heapUsed: '堆已用', heapMax: '堆上限',
-  heapUsage: '堆使用率', nonHeapUsed: '非堆已用', threadCount: '线程数', peakThreadCount: '峰值线程数',
-  version: '版本', mode: '模式', uptimeDays: '运行天数', connectedClients: '连接数',
-  usedMemory: '已用内存', maxMemory: '内存上限', totalCommands: '累计命令',
-  expiredKeys: '过期键', keyspaceHits: '命中', keyspaceMisses: '未命中', keyspace: 'Keyspace',
-  usable: '可用', path: '路径', error: '错误',
+  osName: '操作系统',
+  osArch: '系统架构',
+  osVersion: '系统版本',
+  hostName: '主机名',
+  userDir: '项目路径',
+  currentTime: '当前时间',
+  cores: '核心数',
+  systemLoadAverage: '系统负载',
+  cpuLoad: 'CPU 使用率',
+  processCpuLoad: '进程 CPU 使用率',
+  total: '总量/总容量',
+  used: '已用',
+  free: '空闲',
+  usage: '使用率',
+  javaVersion: 'Java 版本',
+  javaVendor: 'Java 厂商',
+  jvmName: 'JVM',
+  startTime: '启动时间',
+  uptime: '运行时长',
+  heapUsed: '堆已用',
+  heapMax: '堆上限',
+  heapUsage: '堆使用率',
+  nonHeapUsed: '非堆已用',
+  threadCount: '线程数',
+  peakThreadCount: '峰值线程数',
+  version: '版本',
+  mode: '模式',
+  uptimeDays: '运行天数',
+  connectedClients: '连接数',
+  usedMemory: '已用内存',
+  maxMemory: '内存上限',
+  totalCommands: '累计命令',
+  expiredKeys: '过期键',
+  keyspaceHits: '命中',
+  keyspaceMisses: '未命中',
+  keyspace: 'Keyspace',
+  usable: '可用',
+  path: '路径',
+  error: '错误',
 }
 
 const loading = ref(false)

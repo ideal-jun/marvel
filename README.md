@@ -5,7 +5,7 @@ Spring Boot 4 模块化单体后台管理系统，按微服务边界拆分模块
 ## 技术栈
 
 - 后端：Java 21 + Spring Boot 4.1 + Sa-Token 1.46 + MyBatis-Plus 3.5.17 + MySQL 8 + Redis + Flyway
-- 前端：Vue 3 + Vuetify 4 + UnoCSS（官方 presetWind4 集成）+ TypeScript + Vite + Pinia
+- 前端：Vue 3 + Vuetify 4 + UnoCSS（官方 presetWind4 集成）+ TypeScript + Vite + Pinia + ECharts
 
 ## 前端样式方案（Vuetify 官方 presetWind4 集成）
 
@@ -63,6 +63,39 @@ Spring Boot 4 模块化单体后台管理系统，按微服务边界拆分模块
   （Vuetify 支持 `boolean | 'start' | 'end'`，并要求该列有静态 `width`），
   横向滚动时列始终可见；用户页的 `ColumnSettings` 对 `'end'` 列禁用图钉切换。
 
+## 对象存储（local / MinIO）
+
+文件存储抽象为 `StorageService`，通过 `marvel.storage.type` 切换实现：
+
+- `local`（默认）：本地磁盘，上传返回 `/uploads/yyyy/MM/dd/uuid.ext`；
+- `minio`：对象存储，上传返回对象 key，`toUrl` 生成稳定直链（桶匿名只读）或预签名 URL；
+  启动时自动建桶并按 `public-read` 开放匿名只读。
+
+```bash
+# 启动 MinIO
+docker run -d --name minio -p 9000:9000 -p 9001:9001 \
+  -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
+  -v marvel-minio-data:/data pgsty/minio:latest server /data --console-address ":9001"
+# 以 MinIO 作为存储启动后端
+STORAGE_TYPE=minio java -jar marvel-gateway-boot/target/marvel-gateway-boot-*.jar
+```
+
+关键配置：`MINIO_ENDPOINT`、`MINIO_ACCESS_KEY`、`MINIO_SECRET_KEY`、`MINIO_BUCKET`、
+`MINIO_PUBLIC_URL`（走 CDN/反代时填）、`MINIO_PUBLIC_READ`（默认 true，返回稳定直链）。
+
+## 前端代码规范（oxc）
+
+前端 lint 与格式化统一由 oxc 提供（`oxlint` + `oxfmt`），配置见 `.oxlintrc.json` / `.oxfmtrc.json`：
+
+```bash
+pnpm run lint          # oxlint（0 error 视为通过）
+pnpm run lint:fix
+pnpm run format        # oxfmt --write
+pnpm run format:check  # CI 校验格式
+```
+
+CI 在 `pnpm install` 后、`build` 前执行 `lint` 与 `format:check`。
+
 ## 模块结构（= 未来微服务边界）
 
 ```
@@ -108,9 +141,11 @@ marvel-ui            Vue3 前端
 
 ## 功能清单
 
+- **首页看板**：用户/在线/今日登录/操作概览 + 登录趋势、操作趋势、模块分布、任务执行统计（ECharts）
+- **个人中心**：基本资料（含头像上传，随存储实现落地 local/MinIO）、修改密码（入口在顶栏用户下拉）
 - **RBAC 权限**：用户/角色/菜单/部门管理，动态路由，数据权限（`@DataScope` 按部门过滤）
 - **认证**：登录/登出、验证码（可在参数配置中开关）、登录失败保护、在线用户列表与强制下线
-- **系统工具**：字典管理、参数配置、通知公告（含站内消息中心与已读状态）、定时任务（页面化管理 + 执行日志）
+- **系统工具**：字典管理、参数配置、通知公告（站内消息中心：已读/未读、全部已读、单条/批量删除）、定时任务（页面化管理 + 执行日志）
 - **审计**：操作日志（注解 `@Log` 自动记录）、登录日志，支持查询/删除/清空/导出
 - **运维**：服务监控（JVM/系统指标）、缓存监控与管理、文件管理（本地存储）、用户/日志 Excel 导入导出
 
@@ -118,7 +153,6 @@ marvel-ui            Vue3 前端
 
 - 已完成：上述功能清单全部条目（原一/二/三期规划）
 - 规划中：
-  - 对象存储扩展：`StorageService` 目前仅本地磁盘实现，预留 OSS/COS 适配
-  - 首页看板：接入业务统计接口（当前仅展示登录会话信息）
+  - 对象存储扩展：已内置 MinIO（本地实现保留）；如需 OSS/COS 继续实现 `StorageService` 即可
   - 测试补强：auth 登录链路、权限鉴定核心（`StpInterfaceImpl`）等单测覆盖持续补齐；前端组件测试
 - 安全基线：OpenAPI/Swagger 有意不启用；默认口令仅限本地演示（生产请修改并配置 `MYSQL_PASSWORD`）

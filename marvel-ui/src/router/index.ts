@@ -9,9 +9,13 @@ import '@/styles/nprogress.css'
 
 NProgress.configure({ showSpinner: false, speed: 300, minimum: 0.2 })
 
-const LoginView = (): Promise<typeof import('@/views/LoginView.vue')> => import('@/views/LoginView.vue')
+const LoginView = (): Promise<typeof import('@/views/LoginView.vue')> =>
+  import('@/views/LoginView.vue')
 const Layout = (): Promise<typeof import('@/layout/Layout.vue')> => import('@/layout/Layout.vue')
-const DashboardView = (): Promise<typeof import('@/views/DashboardView.vue')> => import('@/views/DashboardView.vue')
+const DashboardView = (): Promise<typeof import('@/views/DashboardView.vue')> =>
+  import('@/views/DashboardView.vue')
+const ProfileView = (): Promise<typeof import('@/views/profile/index.vue')> =>
+  import('@/views/profile/index.vue')
 
 // component 字符串到动态导入的映射（对应后端菜单表 component 字段）
 const viewModules = import.meta.glob('../views/**/*.vue')
@@ -45,7 +49,19 @@ const router = createRouter({
       name: 'layout',
       component: Layout,
       children: [
-        { path: '', name: 'dashboard', component: DashboardView, meta: { title: '首页', icon: 'mdi-view-dashboard-outline' } },
+        {
+          path: '',
+          name: 'dashboard',
+          component: DashboardView,
+          meta: { title: '首页', icon: 'mdi-view-dashboard-outline' },
+        },
+        // 个人中心为登录用户通用页面，不走后端菜单授权（入口在顶栏用户下拉）
+        {
+          path: 'profile',
+          name: 'profile',
+          component: ProfileView,
+          meta: { title: '个人中心', icon: 'mdi-account-circle-outline' },
+        },
       ],
     },
     // 未匹配路由兜底：由守卫在动态路由注册完成后再决定去向

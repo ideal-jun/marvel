@@ -3,10 +3,7 @@
        默认插槽放 v-col 搜索字段（外层已提供 v-row），按钮区固定在底部 -->
   <v-expansion-panels v-model="opened" rounded="lg">
     <v-expansion-panel value="search">
-      <v-expansion-panel-title
-        expand-icon="mdi-chevron-up"
-        collapse-icon="mdi-chevron-down"
-      >
+      <v-expansion-panel-title expand-icon="mdi-chevron-up" collapse-icon="mdi-chevron-down">
         搜索条件
       </v-expansion-panel-title>
       <v-expansion-panel-text>

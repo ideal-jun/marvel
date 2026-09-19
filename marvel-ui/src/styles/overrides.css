@@ -8,4 +8,13 @@
   .v-command-palette__content {
     flex: 1 1 auto;
   }
+
+  /* VTreeview 缩进线：Vuetify 让树自己用 --v-list-indent 缩进，同时把
+     --v-list-group-prepend 归零（见 VList.js 的 indent 逻辑）；而缩进线容器是
+     grid，列宽取自 --prepend-width = var(--v-list-group-prepend, 40px) → 0px，
+     于是各列塌成 0 宽：竖线全叠在同一位置、横向连接宽度也是 0，只剩一条竖线。
+     这里给缩进线容器一个真实列宽（slim 列表默认 28px），恢复官网那种 ├─ / └─ 效果。 */
+  .v-treeview-indent-lines {
+    --prepend-width: 28px;
+  }
 }

@@ -54,15 +54,30 @@
         <template #item.actions="{ item }">
           <v-tooltip v-if="auth.hasPerm('infra:job:run')" text="立即执行">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-play" size="18" class="mr-3 text-success" @click="onRun(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-play"
+                size="18"
+                class="mr-3 text-success"
+                @click="onRun(item)"
+              />
             </template>
           </v-tooltip>
           <v-tooltip v-if="auth.hasPerm('infra:job:list')" text="执行日志">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-text-box-outline" size="18" class="mr-3 text-secondary" @click="openLogs(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-text-box-outline"
+                size="18"
+                class="mr-3 text-secondary"
+                @click="openLogs(item)"
+              />
             </template>
           </v-tooltip>
-          <v-tooltip v-if="auth.hasPerm('infra:job:edit')" :text="item.status === '0' ? '暂停' : '恢复'">
+          <v-tooltip
+            v-if="auth.hasPerm('infra:job:edit')"
+            :text="item.status === '0' ? '暂停' : '恢复'"
+          >
             <template #activator="{ props: p }">
               <v-icon
                 v-bind="p"
@@ -75,12 +90,24 @@
           </v-tooltip>
           <v-tooltip v-if="auth.hasPerm('infra:job:edit')" text="编辑">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-pencil" size="18" class="mr-3 text-secondary" @click="openEdit(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-pencil"
+                size="18"
+                class="mr-3 text-secondary"
+                @click="openEdit(item)"
+              />
             </template>
           </v-tooltip>
           <v-tooltip v-if="auth.hasPerm('infra:job:remove')" text="删除">
             <template #activator="{ props: p }">
-              <v-icon v-bind="p" icon="mdi-delete" size="18" class="text-error" @click="onDelete(item)" />
+              <v-icon
+                v-bind="p"
+                icon="mdi-delete"
+                size="18"
+                class="text-error"
+                @click="onDelete(item)"
+              />
             </template>
           </v-tooltip>
         </template>
@@ -91,28 +118,41 @@
     <v-dialog v-model="dialog" width="560">
       <v-card :title="form.jobId ? '修改任务' : '新增任务'" rounded="xl">
         <v-card-text>
-          <v-text-field v-model="form.jobName" label="任务名称" />
-          <v-text-field v-model="form.invokeTarget" label="调用目标（如 sampleJob.run）" />
-          <div class="flex items-center gap-2">
-            <v-text-field v-model="form.cronExpression" label="cron 表达式（如 0 * * * * ?）" hide-details />
-            <v-btn variant="tonal" rounded="lg" @click="previewCron">预览</v-btn>
-          </div>
-          <div
-            v-if="cronPreview"
-            class="text-caption mt-1 mb-2"
-            :class="cronPreview.valid ? 'text-success' : 'text-error'"
-          >
-            <template v-if="cronPreview.valid">未来执行：{{ (cronPreview.nextTimes || []).join('、') }}</template>
-            <template v-else>{{ cronPreview.message }}</template>
-          </div>
-          <v-radio-group v-model="form.status" inline label="状态">
-            <v-radio label="运行中" value="0" />
-            <v-radio label="暂停" value="1" />
-          </v-radio-group>
-          <v-text-field v-model="form.remark" label="备注" />
-          <div class="text-caption text-medium-emphasis">
-            调用目标为 Spring Bean 名 + 无参方法名；内置演示任务：sampleJob.run
-          </div>
+          <v-form ref="formRef" @submit.prevent="onSave">
+            <v-text-field v-model="form.jobName" label="任务名称" :rules="['$required']" />
+            <v-text-field
+              v-model="form.invokeTarget"
+              label="调用目标（如 sampleJob.run）"
+              :rules="['$required']"
+            />
+            <div class="flex items-center gap-2">
+              <v-text-field
+                v-model="form.cronExpression"
+                label="cron 表达式（如 0 * * * * ?）"
+                hide-details="auto"
+                :rules="['$required']"
+              />
+              <v-btn variant="tonal" rounded="lg" @click="previewCron">预览</v-btn>
+            </div>
+            <div
+              v-if="cronPreview"
+              class="text-caption mt-1 mb-2"
+              :class="cronPreview.valid ? 'text-success' : 'text-error'"
+            >
+              <template v-if="cronPreview.valid"
+                >未来执行：{{ (cronPreview.nextTimes || []).join('、') }}</template
+              >
+              <template v-else>{{ cronPreview.message }}</template>
+            </div>
+            <v-radio-group v-model="form.status" inline label="状态">
+              <v-radio label="运行中" value="0" />
+              <v-radio label="暂停" value="1" />
+            </v-radio-group>
+            <v-text-field v-model="form.remark" label="备注" />
+            <div class="text-caption text-medium-emphasis">
+              调用目标为 Spring Bean 名 + 无参方法名；内置演示任务：sampleJob.run
+            </div>
+          </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -149,7 +189,13 @@
             <template #item.actions="{ item }">
               <v-tooltip v-if="item.status === '1' && auth.hasPerm('infra:job:run')" text="重试">
                 <template #activator="{ props: p }">
-                  <v-icon v-bind="p" icon="mdi-refresh" size="18" class="text-primary" @click="onRetry(item)" />
+                  <v-icon
+                    v-bind="p"
+                    icon="mdi-refresh"
+                    size="18"
+                    class="text-primary"
+                    @click="onRetry(item)"
+                  />
                 </template>
               </v-tooltip>
             </template>
@@ -172,7 +218,9 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{ snack.text }}</v-snackbar>
+    <v-snackbar v-model="snack.show" :color="snack.color" timeout="3000">{{
+      snack.text
+    }}</v-snackbar>
   </div>
 </template>
 
@@ -194,13 +242,18 @@ const auth = useAuthStore()
 const rows = ref<SysJobRow[]>([])
 const loading = ref(false)
 const dialog = ref(false)
+const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 const logDialog = ref(false)
 const logLoading = ref(false)
 const logs = ref<SysJobLogRow[]>([])
 const logTotal = ref(0)
 const currentLogJobId = ref<number | null>(null)
 const logQuery = reactive({ pageNum: 1, pageSize: 10 })
-interface CronPreview { valid: boolean; nextTimes?: string[]; message?: string }
+interface CronPreview {
+  valid: boolean
+  nextTimes?: string[]
+  message?: string
+}
 const cronPreview = ref<CronPreview | null>(null)
 const query = reactive({ jobName: '' as string | null, status: null })
 const form = reactive<Partial<SysJobRow>>({})
@@ -259,6 +312,8 @@ function openEdit(item: SysJobRow): void {
 }
 
 async function onSave(): Promise<void> {
+  const valid = await formRef.value?.validate()
+  if (valid && !valid.valid) return
   try {
     if (form.jobId) {
       await http.put<null>('/infra/job', form)

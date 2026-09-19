@@ -38,6 +38,7 @@ export interface SysUserVO {
   id: number
   username: string
   nickname: string
+  avatar: string | null
   deptId: number | null
   deptName: string | null
   email: string
@@ -248,6 +249,65 @@ export interface SysLogininforRow {
   msg: string
   status: string
   loginTime: string | null
+}
+
+/* ==================== 首页看板 ==================== */
+
+/** 看板概览统计 */
+export interface DashboardStats {
+  userCount: number
+  enabledUserCount: number
+  roleCount: number
+  deptCount: number
+  noticeCount: number
+  onlineCount: number
+  todayLoginCount: number
+  todayOperCount: number
+}
+
+/** 登录趋势点（按日） */
+export interface LoginTrendPoint {
+  date: string
+  success: number
+  fail: number
+}
+
+/** 操作趋势点（按日） */
+export interface OperTrendPoint {
+  date: string
+  count: number
+}
+
+/** 通用名称-数值对（饼图/柱图） */
+export interface NameValue {
+  name: string
+  value: number
+}
+
+/** 任务执行统计 */
+export interface JobStats {
+  total: number
+  enabled: number
+  success: number
+  fail: number
+}
+
+/* ==================== 个人中心 ==================== */
+
+/** 当前用户资料（后端 SysUser，密码密文已抹除） */
+export interface ProfileInfo {
+  userId: number
+  deptId: number | null
+  username: string
+  nickname: string
+  email: string | null
+  phone: string | null
+  sex: string | null
+  avatar: string | null
+  status: string
+  remark?: string | null
+  createTime?: string
+  deptName?: string | null
 }
 
 /** 在线用户（Sa-Token 活跃会话，按用户去重） */

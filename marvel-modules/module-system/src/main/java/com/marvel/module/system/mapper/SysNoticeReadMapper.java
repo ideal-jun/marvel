@@ -2,6 +2,7 @@ package com.marvel.module.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.marvel.module.system.entity.SysNoticeRead;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -34,4 +35,14 @@ public interface SysNoticeReadMapper extends BaseMapper<SysNoticeRead> {
     /** 是否已读 */
     @Select("SELECT COUNT(*) FROM sys_notice_read WHERE user_id = #{userId} AND notice_id = #{noticeId}")
     int exists(@Param("userId") Long userId, @Param("noticeId") Long noticeId);
+
+    /** 某用户已删除的消息 ID */
+    @Select("SELECT notice_id FROM sys_notice_read WHERE user_id = #{userId} AND deleted = 1")
+    List<Long> selectDeletedNoticeIds(@Param("userId") Long userId);
+
+    /** 把消息标记为该用户已删除（幂等 upsert：无记录则插入，已有记录则置 deleted=1） */
+    @Insert("<script>INSERT INTO sys_notice_read (notice_id, user_id, read_time, deleted) VALUES "
+            + "<foreach collection='noticeIds' item='id' separator=','>(#{id}, #{userId}, NOW(), 1)</foreach> "
+            + "ON DUPLICATE KEY UPDATE deleted = 1</script>")
+    int markDeleted(@Param("userId") Long userId, @Param("noticeIds") List<Long> noticeIds);
 }

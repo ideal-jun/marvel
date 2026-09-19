@@ -32,6 +32,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sa-token.version>1.46.0</sa-token.version>
         <mybatis-plus.version>3.5.17</mybatis-plus.version>
+        <minio.version>8.5.17</minio.version>
         <!-- OpenAPI/Swagger 有意不启用：避免对外暴露完整接口与权限模型（渗透测试基线）。
              如需本地调试，可临时引入 org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1
              并放在 dev profile 中，切勿在生产公开 /v3/api-docs 与 /swagger-ui。 -->
@@ -74,6 +75,12 @@
                 <version>${mybatis-plus.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>${minio.version}</version>
             </dependency>
 
             <dependency>
